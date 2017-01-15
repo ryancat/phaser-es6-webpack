@@ -63,7 +63,7 @@ export default class extends Phaser.State {
 
   createHighScoreText () {
     this.highScores = [0]
-    this.highScoreText = this.game.add.text(this.game.world.width - 50, this.game.world.height - 100, this.getHighScoreText(), { fontSize: '16px', fill: '#FFF' })
+    this.highScoreText = this.game.add.text(this.game.world.width - 50, this.game.world.height - 120, this.getHighScoreText(), { fontSize: '16px', fill: '#FFF' })
   }
 
   recordHighscore () {
@@ -76,9 +76,11 @@ export default class extends Phaser.State {
   }
 
   getHighScoreText () {
-    return this.highScores.map((score) => {
+    let sortedHighScores = this.highScores.map((score) => {
       return score + 's'
     }).join('\n')
+
+    return this.secCount + 's\n\n' + sortedHighScores
   }
 
   createNinja () {
