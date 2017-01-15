@@ -24,10 +24,7 @@ export default class extends Phaser.State {
 
     text.anchor.setTo(0.5, 0.5)
 
-    this.physics.startSystem(Phaser.Physics.ARCADE);
-
-    // this.load.image('ninja', './assets/images/loader-bg.png')
-    // this.load.image('baddie', './assets/images/loader-bar.png')
+    this.physics.startSystem(Phaser.Physics.ARCADE)
   }
 
   render () {

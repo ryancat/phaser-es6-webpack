@@ -4,7 +4,7 @@ import Phaser from 'phaser'
 
 export default class extends Phaser.Sprite {
 
-  constructor ({ game, x, y, asset }) {
+  constructor ({ game, x, y, asset, initVelocityX, initVelocityY }) {
     super(game, x, y, asset)
 
     this.game = game
@@ -17,13 +17,9 @@ export default class extends Phaser.Sprite {
     this.body.bounce.x = 1;
     this.body.bounce.y = 1;
 
-    // init speed
-    const xVelocitySeed = (Math.random() - 0.5) * 2
-    const yVelocitySeed = (Math.random() - 0.5) * 2
+    this.currentVelocityX = initVelocityX
+    this.currentVelocityY = initVelocityY
 
-    this.currentVelocityX = xVelocitySeed > 0 ? 80 + xVelocitySeed * 120 : -80 + xVelocitySeed * 120
-    this.currentVelocityY = yVelocitySeed > 0 ? 80 + yVelocitySeed * 120 : -80 + yVelocitySeed * 120
-    
     this.body.velocity.x = this.currentVelocityX;
     this.body.velocity.y = this.currentVelocityY;
   }

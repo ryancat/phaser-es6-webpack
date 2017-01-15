@@ -4,6 +4,15 @@ import Ninja from '../sprites/Ninja'
 import Baddie from '../sprites/Baddie'
 
 export default class extends Phaser.State {
+
+  constructor () {
+    super()
+
+    this.ninjaEvents = []
+    this.gameStartTimestamp = Date.now()
+    this.baddieStates = []
+  }
+
   init () {}
   preload () {}
 
@@ -20,25 +29,100 @@ export default class extends Phaser.State {
     this.createScoreText()
     this.createHighScoreText()
     this.countSec()
-    this.createNinja()
 
     // Add baddie
     this.baddies = this.game.add.group()
+    this.createBaddies()
 
-    for (let i = 0; i < 30; i++) {
-      this.baddies.add(new Baddie({
-        game: this,
-        x: this.world.centerX + Math.random() * this.world.centerX,
-        y: this.world.centerY + Math.random() * this.world.centerY,
-        asset: 'baddie'
-      }))
-    }
+    this.createNinja()
+
   }
 
   update () {
     this.game.physics.arcade.overlap(this.ninja, this.baddies, this.collideNinjaBaddies, null, this)
 
+    // Record last ninja move
+    if (this.ninja.exists && !this.isRecording) {
+      if (!this.leftIsDown && this.ninja.cursor.left.isDown) {
+        this.ninjaEvents.push({
+          timestamp: Date.now() - this.gameStartTimestamp,
+          key: 'left',
+          type: 'down'
+        })
+        this.leftIsDown = true
+        console.log('key add', this.ninjaEvents)
+      }
 
+      if (this.leftIsDown && !this.ninja.cursor.left.isDown) {
+        this.ninjaEvents.push({
+          timestamp: Date.now() - this.gameStartTimestamp,
+          key: 'left',
+          type: 'up'
+        })
+        this.leftIsDown = false
+        console.log('key add', this.ninjaEvents)
+      }
+
+      if (!this.rightIsDown && this.ninja.cursor.right.isDown) {
+        this.ninjaEvents.push({
+          timestamp: Date.now() - this.gameStartTimestamp,
+          key: 'right',
+          type: 'down'
+        })
+        this.rightIsDown = true
+        console.log('key add', this.ninjaEvents)
+      }
+
+      if (this.rightIsDown && !this.ninja.cursor.right.isDown) {
+        this.ninjaEvents.push({
+          timestamp: Date.now() - this.gameStartTimestamp,
+          key: 'right',
+          type: 'up'
+        })
+        this.rightIsDown = false
+        console.log('key add', this.ninjaEvents)
+      }
+
+      if (!this.upIsDown && this.ninja.cursor.up.isDown) {
+        this.ninjaEvents.push({
+          timestamp: Date.now() - this.gameStartTimestamp,
+          key: 'up',
+          type: 'down'
+        })
+        this.upIsDown = true
+        console.log('key add', this.ninjaEvents)
+      }
+
+      if (this.upIsDown && !this.ninja.cursor.up.isDown) {
+        this.ninjaEvents.push({
+          timestamp: Date.now() - this.gameStartTimestamp,
+          key: 'up',
+          type: 'up'
+        })
+        this.upIsDown = false
+        console.log('key add', this.ninjaEvents)
+      }
+
+      if (!this.downIsDown && this.ninja.cursor.down.isDown) {
+        this.ninjaEvents.push({
+          timestamp: Date.now() - this.gameStartTimestamp,
+          key: 'down',
+          type: 'down'
+        })
+        this.downIsDown = true
+        console.log('key add', this.ninjaEvents)
+      }
+
+      if (this.downIsDown && !this.ninja.cursor.down.isDown) {
+        this.ninjaEvents.push({
+          timestamp: Date.now() - this.gameStartTimestamp,
+          key: 'down',
+          type: 'up'
+        })
+        this.downIsDown = false
+        console.log('key add', this.ninjaEvents)
+      }
+    }
   }
 
   render () {
@@ -83,15 +167,55 @@ export default class extends Phaser.State {
     return this.secCount + 's\n\n' + sortedHighScores
   }
 
-  createNinja () {
+  createBaddies (baddieStates = []) {
+    // Kill all existing baddies
+    if (this.baddies) {
+      this.baddies.forEach((baddie) => { baddie.kill() })
+    }
+
+    if (baddieStates.length === 0) {
+      this.baddieStates = []
+    }
+
+    for (let i = 0; i < 30; i++) {
+      let baddieState
+
+      if (baddieStates.length) {
+        baddieState = baddieStates[i]
+      } else {
+        // init speed
+        const xVelocitySeed = (Math.random() - 0.5) * 2
+        const yVelocitySeed = (Math.random() - 0.5) * 2
+
+        baddieState = {
+          game: this,
+          x: this.world.centerX + (Math.random() - 0.5) * 2 * this.world.centerX,
+          y: this.world.centerY + (Math.random() - 0.5) * 2 * this.world.centerY,
+          asset: 'baddie',
+          initVelocityX: xVelocitySeed > 0 ? 80 + xVelocitySeed * 120 : -80 + xVelocitySeed * 120,
+          initVelocityY: yVelocitySeed > 0 ? 80 + yVelocitySeed * 120 : -80 + yVelocitySeed * 120
+        }
+      }
+      
+      this.baddieStates.push(baddieState)
+      this.baddies.add(new Baddie(baddieState))
+    }
+  }
+
+  createNinja (options = {}) {
     this.ninja = new Ninja({
       game: this,
       x: this.world.centerX,
       y: this.world.centerY,
-      asset: 'ninja'
+      asset: 'ninja',
+      options
     })
 
     this.game.add.existing(this.ninja)
+
+    this.createBaddies(this.baddieStates)
+
+    this.gameStartTimestamp = Date.now()
   }
 
   collideNinjaBaddies (ninja, baddie) {
@@ -100,15 +224,26 @@ export default class extends Phaser.State {
 
   killNinja (ninja, baddie) {
     let that = this,
-        countDown = 3
+        countDown = 3,
+        options = {}
     
     this.stopCount()
     this.recordHighscore()
     ninja.kill()
     this.ninjaRespawn(countDown)
 
+    this.isRecording = !this.isRecording
+
+    options.isRecording = this.isRecording
+    if (this.isRecording) {
+      options.isRecording = true
+      options.ninjaEvents = this.ninjaEvents
+    } else {
+      this.ninjaEvents = []
+    }
+
     setTimeout(function () {
-      that.createNinja()
+      that.createNinja(options)
       that.secCount = 0
       that.countSec()
     }, 1000 * countDown)
@@ -124,5 +259,26 @@ export default class extends Phaser.State {
     }
 
     countdownfn()
+  }
+
+  // Key press handling
+  triggerPressKey () {
+    let keyboardEvent = document.createEvent("KeyboardEvent"),
+        initMethod = typeof keyboardEvent.initKeyboardEvent !== 'undefined' ? "initKeyboardEvent" : "initKeyEvent";
+
+
+    keyboardEvent[initMethod](
+                       "keypress", // event type : keydown, keyup, keypress
+                        true, // bubbles
+                        true, // cancelable
+                        window, // viewArg: should be window
+                        false, // ctrlKeyArg
+                        false, // altKeyArg
+                        false, // shiftKeyArg
+                        false, // metaKeyArg
+                        40, // keyCodeArg : unsigned long the virtual key code, else 0
+                        0 // charCodeArgs : unsigned long the Unicode character associated with the depressed key, else 0
+    );
+    document.dispatchEvent(keyboardEvent);
   }
 }
