@@ -2,127 +2,62 @@
 import Phaser from 'phaser'
 import Ninja from '../sprites/Ninja'
 import Baddie from '../sprites/Baddie'
+import Boss from '../sprites/Boss'
 
 export default class extends Phaser.State {
 
   constructor () {
     super()
-
-    this.ninjaEvents = []
-    this.gameStartTimestamp = Date.now()
-    this.baddieStates = []
+    // DEV only
+    window.printM = this.printMeasure
   }
 
-  init () {}
+  init (options = {}) {
+    console.log('game init', options)
+    
+    // Config (immutable)
+    this.gameConfig = {
+      recordingGame: false,
+      sameBaddies: false,
+      numOfBaddies: 20,
+      allowNinjaPassBorder: false,
+      ninjaLives: 3,
+      countDown: 10
+    }
+
+    // Game inner states
+    this.spriteScale = this.game.world.width * this.game.world.width / 800 / 700
+    this.baddieStates = []
+    this.gameLevel = 1
+    this.numOfBaddies = this.gameLevel
+    this.longestTimeCount = this.gameConfig.countDown
+
+    // Measures
+    this.initMeasure()
+  }
+
   preload () {}
 
   create () {
-    // const bannerText = 'Phaser + ES6 + Webpack'
-    // let banner = this.add.text(this.world.centerX, this.game.height - 80, bannerText)
-    // banner.font = 'Bangers'
-    // banner.padding.set(10, 16)
-    // banner.fontSize = 40
-    // banner.fill = '#77BFA3'
-    // banner.smoothed = false
-    // banner.anchor.setTo(0.5)
-
-    this.createScoreText()
-    this.createHighScoreText()
+    this.createCountDownText()
+    // this.createHighScoreText()
     this.countSec()
+
+    // Add Ninja
+    this.createNinja()
 
     // Add baddie
     this.baddies = this.game.add.group()
     this.createBaddies()
 
-    this.createNinja()
+    // Add boss
+    this.createBoss()
 
   }
 
   update () {
     this.game.physics.arcade.overlap(this.ninja, this.baddies, this.collideNinjaBaddies, null, this)
-
-    // Record last ninja move
-    if (this.ninja.exists && !this.isRecording) {
-      if (!this.leftIsDown && this.ninja.cursor.left.isDown) {
-        this.ninjaEvents.push({
-          timestamp: Date.now() - this.gameStartTimestamp,
-          key: 'left',
-          type: 'down'
-        })
-        this.leftIsDown = true
-        console.log('key add', this.ninjaEvents)
-      }
-
-      if (this.leftIsDown && !this.ninja.cursor.left.isDown) {
-        this.ninjaEvents.push({
-          timestamp: Date.now() - this.gameStartTimestamp,
-          key: 'left',
-          type: 'up'
-        })
-        this.leftIsDown = false
-        console.log('key add', this.ninjaEvents)
-      }
-
-      if (!this.rightIsDown && this.ninja.cursor.right.isDown) {
-        this.ninjaEvents.push({
-          timestamp: Date.now() - this.gameStartTimestamp,
-          key: 'right',
-          type: 'down'
-        })
-        this.rightIsDown = true
-        console.log('key add', this.ninjaEvents)
-      }
-
-      if (this.rightIsDown && !this.ninja.cursor.right.isDown) {
-        this.ninjaEvents.push({
-          timestamp: Date.now() - this.gameStartTimestamp,
-          key: 'right',
-          type: 'up'
-        })
-        this.rightIsDown = false
-        console.log('key add', this.ninjaEvents)
-      }
-
-      if (!this.upIsDown && this.ninja.cursor.up.isDown) {
-        this.ninjaEvents.push({
-          timestamp: Date.now() - this.gameStartTimestamp,
-          key: 'up',
-          type: 'down'
-        })
-        this.upIsDown = true
-        console.log('key add', this.ninjaEvents)
-      }
-
-      if (this.upIsDown && !this.ninja.cursor.up.isDown) {
-        this.ninjaEvents.push({
-          timestamp: Date.now() - this.gameStartTimestamp,
-          key: 'up',
-          type: 'up'
-        })
-        this.upIsDown = false
-        console.log('key add', this.ninjaEvents)
-      }
-
-      if (!this.downIsDown && this.ninja.cursor.down.isDown) {
-        this.ninjaEvents.push({
-          timestamp: Date.now() - this.gameStartTimestamp,
-          key: 'down',
-          type: 'down'
-        })
-        this.downIsDown = true
-        console.log('key add', this.ninjaEvents)
-      }
-
-      if (this.downIsDown && !this.ninja.cursor.down.isDown) {
-        this.ninjaEvents.push({
-          timestamp: Date.now() - this.gameStartTimestamp,
-          key: 'down',
-          type: 'up'
-        })
-        this.downIsDown = false
-        console.log('key add', this.ninjaEvents)
-      }
-    }
+    this.game.physics.arcade.overlap(this.ninja, this.boss, this.collideNinjaBoss, null, this)
   }
 
   render () {
@@ -131,75 +66,141 @@ export default class extends Phaser.State {
     }
   }
 
-  createScoreText () {
-    this.secCount = 0
-    this.scoreText = this.game.add.text(16, this.game.world.height - 40, 'score: ' + this.secCount + 's', { fontSize: '32px', fill: '#FFF' })
+  createCountDownText () {
+    this.countDown = this.gameConfig.countDown || 10
+    this.scoreText = this.game.add.text(16, this.game.world.height - 40, 'Remain: ' + this.countDown + 's', { fontSize: '32px', fill: '#FFF' })
   }
 
   countSec () {
-    this.scoreText.text = 'score: ' + this.secCount++ + 's'
-    this.countSecTimout = setTimeout(this.countSec.bind(this), 1000)
-  }
-
-  stopCount () {
-    clearTimeout(this.countSecTimout)
-  }
-
-  createHighScoreText () {
-    this.highScores = [0]
-    this.highScoreText = this.game.add.text(this.game.world.width - 50, this.game.world.height - 120, this.getHighScoreText(), { fontSize: '16px', fill: '#FFF' })
-  }
-
-  recordHighscore () {
-    this.highScores.push(this.secCount)
-    this.highScores = this.highScores.sort().reverse()
-    if (this.highScores.length > 3) {
-      this.highScores.pop()
+    if (this.countDown === 0) {
+      // Game over
+      this.gameOver()
     }
-    this.highScoreText.text = this.getHighScoreText()
+    else {
+      this.scoreText.text = 'Remain: ' + this.countDown-- + 's'
+      this.countSecTimout = setTimeout(this.countSec.bind(this), 1000)
+    }
   }
 
-  getHighScoreText () {
-    let sortedHighScores = this.highScores.map((score) => {
-      return score + 's'
-    }).join('\n')
-
-    return this.secCount + 's\n\n' + sortedHighScores
+  addSec (secondToAdd = 8) {
+    this.countDown += secondToAdd
+    this.longestTimeCount = Math.max(this.longestTimeCount, this.countDown)
   }
 
-  createBaddies (baddieStates = []) {
+  // createHighScoreText () {
+  //   this.highScores = [0]
+  //   this.highScoreText = this.game.add.text(this.game.world.width - 50, this.game.world.height - 120, this.getHighScoreText(), { fontSize: '16px', fill: '#FFF' })
+  // }
+
+  // recordHighscore () {
+  //   this.highScores.push(this.countDown)
+  //   this.highScores = this.highScores.sort().reverse()
+  //   if (this.highScores.length > 3) {
+  //     this.highScores.pop()
+  //   }
+  //   this.highScoreText.text = this.getHighScoreText()
+  // }
+
+  // getHighScoreText () {
+  //   let sortedHighScores = this.highScores.map((score) => {
+  //     return score + 's'
+  //   }).join('\n')
+
+  //   return this.countDown + 's\n\n' + sortedHighScores
+  // }
+
+  createBaddies () {
     // Kill all existing baddies
     if (this.baddies) {
       this.baddies.forEach((baddie) => { baddie.kill() })
     }
 
-    if (baddieStates.length === 0) {
-      this.baddieStates = []
-    }
-
-    for (let i = 0; i < 30; i++) {
-      let baddieState
-
-      if (baddieStates.length) {
-        baddieState = baddieStates[i]
-      } else {
-        // init speed
-        const xVelocitySeed = (Math.random() - 0.5) * 2
-        const yVelocitySeed = (Math.random() - 0.5) * 2
-
-        baddieState = {
-          game: this,
-          x: this.world.centerX + (Math.random() - 0.5) * 2 * this.world.centerX,
-          y: this.world.centerY + (Math.random() - 0.5) * 2 * this.world.centerY,
-          asset: 'baddie',
-          initVelocityX: xVelocitySeed > 0 ? 80 + xVelocitySeed * 120 : -80 + xVelocitySeed * 120,
-          initVelocityY: yVelocitySeed > 0 ? 80 + yVelocitySeed * 120 : -80 + yVelocitySeed * 120
-        }
+    for (let i = 0; i < (this.numOfBaddies || 1); i++) {
+      if (!this.baddieStates[i]) {
+        this.baddieStates[i] = this.getNewBaddieState()
       }
-      
-      this.baddieStates.push(baddieState)
-      this.baddies.add(new Baddie(baddieState))
+
+      this.addBaddie(this.baddieStates[i])
     }
+  }
+
+  getNewBaddieState () {
+    // init speed
+    const xVelocitySeed = (Math.random() - 0.5) * 2
+    const yVelocitySeed = (Math.random() - 0.5) * 2
+
+    let getDim =  (center) => {
+      return center + (Math.random() - 0.5) * 2 * center
+    }
+
+    let x, y
+
+    do {
+      x = getDim(this.world.centerX)
+    } while (Math.abs(this.ninja.position.x - x) < 30)
+
+    do {
+      y = getDim(this.world.centerY)
+    } while (Math.abs(this.ninja.position.y - y) < 30)
+
+    return {
+      game: this,
+      x: x,
+      y: y,
+      asset: 'baddie',
+      initVelocityX: xVelocitySeed > 0 ? 80 + xVelocitySeed * 120 : -80 + xVelocitySeed * 120,
+      initVelocityY: yVelocitySeed > 0 ? 80 + yVelocitySeed * 120 : -80 + yVelocitySeed * 120
+    }
+  }
+
+  addBaddie (baddieState) {
+    if (!baddieState) {
+      baddieState = this.getNewBaddieState()
+      this.baddieStates.push(baddieState)
+    }
+
+    let baddie = new Baddie(baddieState)
+    baddie.scale.setTo(this.spriteScale, this.spriteScale)
+
+    return this.baddies.add(baddie)
+  }
+
+  // Randomly remove a baddie
+  removeBaddie () {
+    let baddieToRemove = this.baddies.removeChildAt(0)
+    if (baddieToRemove) {
+      baddieToRemove.kill()
+    }
+  }
+
+  createBoss (options = {}) {
+    let getDim =  (center) => {
+      return center + (Math.random() - 0.5) * 2 * center
+    }
+
+    let x, y
+
+    do {
+      x = getDim(this.world.centerX)
+    } while (Math.abs(this.ninja.position.x - x) < 30)
+
+    do {
+      y = getDim(this.world.centerY)
+    } while (Math.abs(this.ninja.position.y - y) < 30)
+
+    let bossState = {
+      game: this,
+      x: x,
+      y: y,
+      asset: 'baddie',
+      initVelocityX: 50 * (1 + this.gameLevel / 10),
+      initVelocityY: 50 * (1 + this.gameLevel / 10)
+    }
+
+    this.boss = new Boss(bossState)
+    this.boss.scale.setTo(this.spriteScale, this.spriteScale)
+    this.game.add.existing(this.boss)
+
   }
 
   createNinja (options = {}) {
@@ -211,74 +212,186 @@ export default class extends Phaser.State {
       options
     })
 
+    this.ninja.scale.setTo(this.spriteScale, this.spriteScale)
+
     this.game.add.existing(this.ninja)
 
-    this.createBaddies(this.baddieStates)
+    this.startMeasureSession()
 
-    this.gameStartTimestamp = Date.now()
+    // if (this.gameConfig.sameBaddies === true) {
+    //   this.createBaddies(this.baddieStates)
+    // } else {
+    //   this.createBaddies()
+    // }
   }
 
   collideNinjaBaddies (ninja, baddie) {
     this.killNinja(ninja, baddie)
   }
 
+  collideNinjaBoss (ninja, boss) {
+    this.killBoss(ninja, boss)
+  }
+
   killNinja (ninja, baddie) {
-    let that = this,
-        countDown = 3,
-        options = {}
+    let that = this
     
-    this.stopCount()
-    this.recordHighscore()
+    // this.stopCount()
+    // this.recordHighscore()
     ninja.kill()
-    this.ninjaRespawn(countDown)
+    // this.ninjaRespawn(countDown)
 
-    this.isRecording = !this.isRecording
+    // setTimeout(function () {
+    //   that.createNinja()
+    //   that.secCount = 0
+    //   that.countSec()
+    // }, 1000 * countDown)
 
-    options.isRecording = this.isRecording
-    if (this.isRecording) {
-      options.isRecording = true
-      options.ninjaEvents = this.ninjaEvents
-    } else {
-      this.ninjaEvents = []
+    // When ninja is killed, game over
+    this.gameOver()
+
+    // Ninja respawn soon
+    // setTimeout(function () {
+    //   that.createNinja()
+    // }, 300)
+
+    // // Record the current session
+    // this.record()
+
+    // // When ninja get killed, we are going to the prev level
+    // this.prevLevel()
+
+  }
+
+  killBoss (ninja, boss) {
+    let that = this
+    // this.stopCount()
+    // this.recordHighscore()
+    boss.kill()
+    // this.ninjaRespawn(countDown)
+
+    // setTimeout(function () {
+    //   that.createNinja()
+    //   that.secCount = 0
+    //   that.countSec()
+    // }, 1000 * countDown)
+
+    // this.state.start('Game Intro', true, false, {
+    //   gameStage: this.gameStage
+    // })
+    // 
+    
+    // When we kill the boss, we are going to the next level
+    this.nextLevel()
+
+    // Killing boss reward player time
+    this.addSec()
+
+    // Boss will respawn soon
+    this.createBoss()
+
+  }
+
+  // ninjaRespawn (countDown) {
+  //   const countdownfn = () => {
+  //     if (countDown >= 0) {
+  //       this.scoreText.text = 'Respawn: ' + countDown-- + 's' 
+  //       setTimeout(countdownfn, 1000)
+  //     }
+  //   }
+
+  //   countdownfn()
+  // }
+
+  // Measure stat logics
+  initMeasure () {
+    this.measureStat = {
+      sessions: [],
+      start: Date.now(),
+      end: -1
+    }
+  }
+
+  startMeasureSession () {
+    // End current measure session if exists
+    if (this.currentMeasureSession) {
+      this.endMeasureSession()
     }
 
-    setTimeout(function () {
-      that.createNinja(options)
-      that.secCount = 0
-      that.countSec()
-    }, 1000 * countDown)
-
-  }
-
-  ninjaRespawn (countDown) {
-    const countdownfn = () => {
-      if (countDown >= 0) {
-        this.scoreText.text = 'Respawn: ' + countDown-- + 's' 
-        setTimeout(countdownfn, 1000)
-      }
+    this.currentMeasureSession = {
+      start: Date.now(),
+      end: null,
+      gameLevel: this.gameLevel,
+      bossDeadTime: [],
+      snapshots: []
     }
 
-    countdownfn()
+    this.measureStat.sessions.push(this.currentMeasureSession)
+
+    return this.currentMeasureSession
   }
 
-  // Key press handling
-  triggerPressKey () {
-    let keyboardEvent = document.createEvent("KeyboardEvent"),
-        initMethod = typeof keyboardEvent.initKeyboardEvent !== 'undefined' ? "initKeyboardEvent" : "initKeyEvent";
-
-
-    keyboardEvent[initMethod](
-                       "keypress", // event type : keydown, keyup, keypress
-                        true, // bubbles
-                        true, // cancelable
-                        window, // viewArg: should be window
-                        false, // ctrlKeyArg
-                        false, // altKeyArg
-                        false, // shiftKeyArg
-                        false, // metaKeyArg
-                        40, // keyCodeArg : unsigned long the virtual key code, else 0
-                        0 // charCodeArgs : unsigned long the Unicode character associated with the depressed key, else 0
-    );
-    document.dispatchEvent(keyboardEvent);
+  endMeasureSession () {
+    this.currentMeasureSession.end = Date.now()
+    this.currentMeasureSession = null
   }
+
+  addMeasure (key) {
+
+    switch(key) {
+      case 'boss dead':
+        this.currentMeasureSession.bossDeadTime.push(Date.now())
+
+      default:
+        this.currentMeasureSession.snapshots.push(this.baddieStates)
+    }
+  }
+
+  record (key) {
+    if (!this.currentMeasureSession) {
+      return
+    }
+
+    this.currentMeasureSession.name = key
+
+    // After recording, end the current measure session
+    this.endMeasureSession()
+    
+  }
+
+  printMeasure () {
+    console.log('all:', this.measureStat)
+  }
+
+  ////// LEVELS
+  nextLevel (nextStep = 1) {
+    this.gameLevel += nextStep
+    this.numOfBaddies = this.gameLevel
+    this.addBaddie()
+  }
+
+  prevLevel (prevStep = 1) {
+    this.gameLevel -= prevStep
+    this.numOfBaddies = this.gameLevel
+    this.removeBaddie()
+  }
+
+  ////// GAME OVER
+  gameOver () {
+    clearTimeout(this.countSecTimout)
+
+    this.state.start('Game Over', true, false, {
+      killBossCount: this.gameLevel - 1,
+      longestTimeCount: this.longestTimeCount
+    })
+  }
+
 }
+
+// TODO:
+// x1. player should die at some point
+// x2. motivation to kill boss (time limit!)
+// 3. Personal ranking
+// 4. All ranking
+// 5. Share
+// 6. Mobile support
