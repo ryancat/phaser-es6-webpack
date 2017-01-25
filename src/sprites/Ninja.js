@@ -11,14 +11,16 @@ export default class extends Phaser.Sprite {
     this.anchor.setTo(0.5)
     this.cursor = game.input.keyboard.createCursorKeys();
 
+    this.orientation = options.orientation || {}
+
     game.physics.arcade.enable(this);
     this.body.collideWorldBounds = true;
 
     // Ninja move map
     this.ninjaMoveMap = {
-      left: () => {
+      left: (multiplier = 20) => {
         //  Move to the left
-        this.body.velocity.x = -NINJA_SPEED;
+        this.body.velocity.x = -NINJA_SPEED * multiplier / 20;
 
         // Ninja flip
         if (this.game.gameConfig.allowNinjaPassBorder) {
@@ -31,9 +33,9 @@ export default class extends Phaser.Sprite {
         
       },
 
-      right: () => {
+      right: (multiplier = 20) => {
         //  Move to the left
-        this.body.velocity.x = NINJA_SPEED;
+        this.body.velocity.x = NINJA_SPEED * multiplier / 20;
 
         // Ninja flip
         if (this.game.gameConfig.allowNinjaPassBorder) {
@@ -45,9 +47,9 @@ export default class extends Phaser.Sprite {
         }
       },
 
-      up: () => {
+      up: (multiplier = 20) => {
         //  Move to the left
-        this.body.velocity.y = -NINJA_SPEED;
+        this.body.velocity.y = -NINJA_SPEED * multiplier / 20;
 
         // Ninja flip
         if (this.game.gameConfig.allowNinjaPassBorder) {
@@ -59,9 +61,9 @@ export default class extends Phaser.Sprite {
         }
       },
 
-      down: () => {
+      down: (multiplier = 20) => {
         //  Move to the left
-        this.body.velocity.y = NINJA_SPEED;
+        this.body.velocity.y = NINJA_SPEED * multiplier / 20;
 
         // Ninja flip
         if (this.game.gameConfig.allowNinjaPassBorder) {
@@ -81,20 +83,20 @@ export default class extends Phaser.Sprite {
     this.body.velocity.y = 0;
 
     // Basic move
-    if (this.cursor.left.isDown) {
-      this.ninjaMoveMap.left()
+    if (this.cursor.left.isDown || this.orientation.gamma < this.orientation.startGamma) {
+      this.ninjaMoveMap.left(this.orientation.startGamma - this.orientation.gamma)
     }
     
-    if (this.cursor.right.isDown) {
-      this.ninjaMoveMap.right()
+    if (this.cursor.right.isDown || this.orientation.gamma > this.orientation.startGamma) {
+      this.ninjaMoveMap.right(this.orientation.gamma - this.orientation.startGamma)
     }
     
-    if (this.cursor.up.isDown) {
-      this.ninjaMoveMap.up()
+    if (this.cursor.up.isDown || this.orientation.beta < this.orientation.startBeta) {
+      this.ninjaMoveMap.up(this.orientation.startBeta - this.orientation.beta)
     }
     
-    if (this.cursor.down.isDown) {
-      this.ninjaMoveMap.down()
+    if (this.cursor.down.isDown || this.orientation.beta > this.orientation.startBeta) {
+      this.ninjaMoveMap.down(this.orientation.beta - this.orientation.startBeta)
     }
   }
 

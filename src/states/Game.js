@@ -1,5 +1,6 @@
 /* globals __DEV__ */
 import Phaser from 'phaser'
+
 import Ninja from '../sprites/Ninja'
 import Baddie from '../sprites/Baddie'
 import Boss from '../sprites/Boss'
@@ -14,7 +15,39 @@ export default class extends Phaser.State {
 
   init (options = {}) {
     console.log('game init', options)
+
+    let that = this,
+        device = this.game.device
+
+    // make the game occuppy all available space, but respecting
+    // aspect ratio – with letterboxing if needed
+    this.game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+    this.game.scale.pageAlignHorizontally = true;
+    this.game.scale.pageAlignVertically = true;
     
+    // Adding accelerator support for mobile
+    this.orientation = {
+      startBeta: null,
+      startGamma: null
+    }
+
+    // if (device.touch && !device.desktop) {
+      if (window.DeviceOrientationEvent) {
+        window.addEventListener('deviceorientation', (eventData) => {
+          if (that.orientation.startBeta === null) {
+            that.orientation.startBeta = eventData.beta
+          }
+
+          if (that.orientation.startGamma === null) {
+            that.orientation.startGamma = eventData.gamma
+          }
+
+          that.orientation.beta = eventData.beta
+          that.orientation.gamma = eventData.gamma
+        });
+      }
+    // }
+
     // Config (immutable)
     this.gameConfig = {
       recordingGame: false,
@@ -26,7 +59,7 @@ export default class extends Phaser.State {
     }
 
     // Game inner states
-    this.spriteScale = this.game.world.width * this.game.world.width / 800 / 700
+    this.spriteScale = this.game.world.width / 600
     this.baddieStates = []
     this.gameLevel = 1
     this.numOfBaddies = this.gameLevel
@@ -44,7 +77,9 @@ export default class extends Phaser.State {
     this.countSec()
 
     // Add Ninja
-    this.createNinja()
+    this.createNinja({
+      orientation: this.orientation
+    })
 
     // Add baddie
     this.baddies = this.game.add.group()
@@ -82,7 +117,7 @@ export default class extends Phaser.State {
     }
   }
 
-  addSec (secondToAdd = 8) {
+  addSec (secondToAdd = 5) {
     this.countDown += secondToAdd
     this.longestTimeCount = Math.max(this.longestTimeCount, this.countDown)
   }
