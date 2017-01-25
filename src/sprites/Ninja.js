@@ -1,4 +1,5 @@
 import Phaser from 'phaser'
+import _ from 'lodash'
 
 const NINJA_SPEED = 160
 
@@ -83,19 +84,27 @@ export default class extends Phaser.Sprite {
     this.body.velocity.y = 0;
 
     // Basic move
-    if (this.cursor.left.isDown || this.orientation.gamma < this.orientation.startGamma) {
+    if (this.cursor.left.isDown) {
+      this.ninjaMoveMap.left()
+    } else if (this.orientation.gamma < this.orientation.startGamma) {
       this.ninjaMoveMap.left(this.orientation.startGamma - this.orientation.gamma)
     }
-    
-    if (this.cursor.right.isDown || this.orientation.gamma > this.orientation.startGamma) {
+
+    if (this.cursor.right.isDown) {
+      this.ninjaMoveMap.right()
+    } else if (this.orientation.gamma > this.orientation.startGamma) {
       this.ninjaMoveMap.right(this.orientation.gamma - this.orientation.startGamma)
     }
     
-    if (this.cursor.up.isDown || this.orientation.beta < this.orientation.startBeta) {
+    if (this.cursor.up.isDown) {
+      this.ninjaMoveMap.up()
+    } else if (this.orientation.beta < this.orientation.startBeta) {
       this.ninjaMoveMap.up(this.orientation.startBeta - this.orientation.beta)
     }
     
-    if (this.cursor.down.isDown || this.orientation.beta > this.orientation.startBeta) {
+    if (this.cursor.down.isDown) {
+      this.ninjaMoveMap.down()
+    } else if (this.orientation.beta > this.orientation.startBeta) {
       this.ninjaMoveMap.down(this.orientation.beta - this.orientation.startBeta)
     }
   }
