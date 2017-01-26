@@ -4,8 +4,7 @@ export default class extends Phaser.State {
 
   init (stateProp = {}) {
     this.stateProp = stateProp
-    let restartKey = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
-
+    let restartKey = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR)
     restartKey.onDown.addOnce(this.gameRestart, this)
   }
 
@@ -33,6 +32,12 @@ export default class extends Phaser.State {
     // banner.fill = '#77BFA3'
     // banner.smoothed = false
     // banner.anchor.setTo(0.5)
+  }
+
+  update () {
+    if (this.game.input.pointer1.isDown) {
+      this.gameRestart()
+    }
   }
 
   gameRestart () {

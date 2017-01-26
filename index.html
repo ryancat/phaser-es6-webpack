@@ -12,15 +12,22 @@
     <style>
         html,
         body {
-            margin: 0;
-            padding: 0;
+          margin: 0;
+          padding: 0;
+          overflow: hidden;
+        }
+
+        .canvasLayer {
+          position: absolute;
         }
     </style>
 </head>
 
 <body>
 
-    <div id="content"></div>
+    <div id="content" class="canvasLayer"></div>
+    <div id="background" class="canvasLayer"></div>
+
     <script src="dist/vendor.bundle.js"></script>
     <script src="dist/bundle.js"></script>
 

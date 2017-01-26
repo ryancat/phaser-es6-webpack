@@ -14,7 +14,8 @@ class Game extends Phaser.Game {
     let height = document.documentElement.clientHeight
 
     super(width, height, Phaser.CANVAS, 'content', null)
-
+    
+    // State manager
     this.state.add('Boot', BootState)
     this.state.add('Splash', SplashState)
     this.state.add('Game', GameState)

@@ -72,6 +72,8 @@ export default class extends Phaser.State {
   preload () {}
 
   create () {
+    this.createBackground()
+
     this.createCountDownText()
     // this.createHighScoreText()
     this.countSec()
@@ -95,30 +97,55 @@ export default class extends Phaser.State {
     this.game.physics.arcade.overlap(this.ninja, this.boss, this.collideNinjaBoss, null, this)
   }
 
-  render () {
-    if (__DEV__) {
-      this.game.debug.spriteInfo(this.ninja, 32, 32)
-    }
+  render () { }
+
+  createBackground () {
+    // Add background
+    this.backgroundLayer = document.createElement('canvas')
+    let width = this.game.world.width
+    let height = this.game.world.height
+
+    this.backgroundLayer.width = width
+    this.backgroundLayer.height = height
+
+    let backgroundCtx = this.backgroundLayer.getContext('2d')
+
+    backgroundCtx.fillStyle = 'rgba(0, 0, 0, 0)'
+    backgroundCtx.fillRect(0, 0, width, height)
+
+    document.getElementById('background').appendChild(this.backgroundLayer)
   }
 
   createCountDownText () {
     this.countDown = this.gameConfig.countDown || 10
-    this.scoreText = this.game.add.text(16, this.game.world.height - 40, 'Remain: ' + this.countDown + 's', { fontSize: '32px', fill: '#FFF' })
+    // this.scoreText = this.game.add.text(16, this.game.world.height - 40, 'Remain: ' + this.countDown + 's', { fontSize: '32px', fill: '#FFF' })
   }
 
   countSec () {
-    if (this.countDown === 0) {
+    if (this.countDown <= 0) {
       // Game over
       this.gameOver()
     }
     else {
-      this.scoreText.text = 'Remain: ' + this.countDown-- + 's'
-      this.countSecTimout = setTimeout(this.countSec.bind(this), 1000)
+      this.countDown = (this.countDown - 0.1).toFixed(1)
+      // this.scoreText.text = 'Remain: ' + this.countDown + 's'
+      this.countSecTimout = setTimeout(this.countSec.bind(this), 100)
+
+      let backgroundCtx = this.backgroundLayer.getContext('2d')
+      let countPercentage = (1 - Math.min(this.countDown / 10, 1)).toFixed(2)
+      // let countPercentagePow = 1 - Math.min(Math.pow(this.countDown / 10, 2), 1)
+      let width = this.game.world.width
+      let height = this.game.world.height
+
+      backgroundCtx.clearRect(0, 0, width, height)
+      // backgroundCtx.fillStyle = 'rgba(' + Math.floor(255 * countPercentage) + ', 0, 0, ' + (0.3 * countPercentage).toFixed(1) + ')'
+      backgroundCtx.fillStyle = 'rgba(255' + ', 0, 0, ' + (0.2 * countPercentage).toFixed(2) + ')'
+      backgroundCtx.fillRect(0, height * countPercentage, width, height)
     }
   }
 
   addSec (secondToAdd = 5) {
-    this.countDown += secondToAdd
+    this.countDown = (+this.countDown) + (+secondToAdd)
     this.longestTimeCount = Math.max(this.longestTimeCount, this.countDown)
   }
 
@@ -320,7 +347,7 @@ export default class extends Phaser.State {
     this.nextLevel()
 
     // Killing boss reward player time
-    this.addSec()
+    this.addSec(this.gameLevel)
 
     // Boss will respawn soon
     this.createBoss()
