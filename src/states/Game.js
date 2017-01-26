@@ -72,7 +72,8 @@ export default class extends Phaser.State {
   preload () {}
 
   create () {
-    this.createBackground()
+    this.createBackground1()
+    this.createBackground2()
 
     this.createCountDownText()
     // this.createHighScoreText()
@@ -99,21 +100,45 @@ export default class extends Phaser.State {
 
   render () { }
 
-  createBackground () {
+  // Background for timeout counters
+  createBackground1 () {
     // Add background
-    this.backgroundLayer = document.createElement('canvas')
+    this.backgroundLayer1 = document.createElement('canvas')
     let width = this.game.world.width
     let height = this.game.world.height
 
-    this.backgroundLayer.width = width
-    this.backgroundLayer.height = height
+    this.backgroundLayer1.width = width
+    this.backgroundLayer1.height = height
 
-    let backgroundCtx = this.backgroundLayer.getContext('2d')
+    let backgroundCtx = this.backgroundLayer1.getContext('2d')
 
     backgroundCtx.fillStyle = 'rgba(0, 0, 0, 0)'
     backgroundCtx.fillRect(0, 0, width, height)
 
-    document.getElementById('background').appendChild(this.backgroundLayer)
+    document.getElementById('background1').appendChild(this.backgroundLayer1)
+  }
+
+  // Background for kill boss counters
+  createBackground2 () {
+    // Add background
+    this.backgroundLayer2 = document.createElement('div')
+    this.backgroundLayer2.classList.add('centerText')
+    let width = this.game.world.width
+    let height = this.game.world.height
+
+    this.backgroundLayer2.style.width = width + 'px'
+    this.backgroundLayer2.style.height = height + 'px'
+    this.backgroundLayer2.style.color = 'rgba(124, 93, 96, 0.3)'
+    this.backgroundLayer2.style.fontFamily = 'Bangers'
+    this.backgroundLayer2.style.fontSize = Math.min(width, height) + 'px'
+
+    this.updateBackgroundLayer2()
+
+    document.getElementById('background2').appendChild(this.backgroundLayer2)
+  }
+
+  updateBackgroundLayer2 () {
+    this.backgroundLayer2.innerHTML = '<span>' + this.gameLevel + '</span>'
   }
 
   createCountDownText () {
@@ -129,18 +154,20 @@ export default class extends Phaser.State {
     else {
       this.countDown = (this.countDown - 0.1).toFixed(1)
       // this.scoreText.text = 'Remain: ' + this.countDown + 's'
-      this.countSecTimout = setTimeout(this.countSec.bind(this), 100)
 
-      let backgroundCtx = this.backgroundLayer.getContext('2d')
+      // Add the count down progress
+      let backgroundCtx = this.backgroundLayer1.getContext('2d')
       let countPercentage = (1 - Math.min(this.countDown / 10, 1)).toFixed(2)
       // let countPercentagePow = 1 - Math.min(Math.pow(this.countDown / 10, 2), 1)
       let width = this.game.world.width
       let height = this.game.world.height
 
       backgroundCtx.clearRect(0, 0, width, height)
-      // backgroundCtx.fillStyle = 'rgba(' + Math.floor(255 * countPercentage) + ', 0, 0, ' + (0.3 * countPercentage).toFixed(1) + ')'
       backgroundCtx.fillStyle = 'rgba(255' + ', 0, 0, ' + (0.2 * countPercentage).toFixed(2) + ')'
       backgroundCtx.fillRect(0, height * countPercentage, width, height)
+
+      // Keep counting down
+      this.countSecTimout = setTimeout(this.countSec.bind(this), 100)
     }
   }
 
@@ -429,6 +456,7 @@ export default class extends Phaser.State {
   nextLevel (nextStep = 1) {
     this.gameLevel += nextStep
     this.numOfBaddies = this.gameLevel
+    this.updateBackgroundLayer2()
     this.addBaddie()
   }
 

@@ -17,16 +17,26 @@
           overflow: hidden;
         }
 
-        .canvasLayer {
+        .gameLayer {
           position: absolute;
         }
+
+        .centerText {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+        }
+
     </style>
 </head>
 
 <body>
 
-    <div id="content" class="canvasLayer"></div>
-    <div id="background" class="canvasLayer"></div>
+    <div id="content" class="gameLayer"></div>
+    <div id="background1" class="gameLayer"></div>
+    <div id="background2" class="gameLayer"></div>
+    <div id="background3" class="gameLayer"></div>
 
     <script src="dist/vendor.bundle.js"></script>
     <script src="dist/bundle.js"></script>
