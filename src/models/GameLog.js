@@ -1,10 +1,10 @@
 // game log mongoose model
 
 // Imports - 3rd party
-import mongoose from 'mongoose'
+const mongoose = require('mongoose');
 
 const GameLog = new mongoose.Schema({
-  
+  sign: { type: String, default: 'A Ninja has no name', trim: true },
 
 
   

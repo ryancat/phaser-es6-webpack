@@ -59,14 +59,23 @@ export default class extends Phaser.State {
     }
 
     // Game inner states
+    this.mainCanvas = document.getElementById('content').getElementsByTagName('canvas')[0]
     this.spriteScale = this.game.world.width / 600
     this.baddieStates = []
     this.gameLevel = 1
     this.numOfBaddies = this.gameLevel
     this.longestTimeCount = this.gameConfig.countDown
+    this.captureDataURLs = []
+
+    // Get state from server
+    this.totalPlayCountPromise = new Promise((resolve, reject) => {
+
+    })
 
     // Measures
     this.initMeasure()
+
+    // Listeners
   }
 
   preload () {}
@@ -91,6 +100,28 @@ export default class extends Phaser.State {
     // Add boss
     this.createBoss()
 
+    // Start recording gif
+    // this.gifRecord = new GIF({
+    //   workers: 10,
+    //   quality: 10
+    // })
+
+    // let mainCanvas = document.getElementById('content').getElementsByTagName('canvas')[0]
+    // this.gifRecord.addFrame(mainCanvas)
+    // this.gifRecord.on('finished', (blob) => {
+    // });
+
+    // this.gifRecord.render()
+
+    // this.capturer = new CCapture({ 
+    //   format: 'jpg',
+    //   quanlity: 10
+    // })
+
+    // this.capturer.start()
+    
+    // Capture
+    this.captureDataURLs.push(this.mainCanvas.toDataURL('image/png'))
   }
 
   update () {
@@ -98,47 +129,75 @@ export default class extends Phaser.State {
     this.game.physics.arcade.overlap(this.ninja, this.boss, this.collideNinjaBoss, null, this)
   }
 
-  render () { }
+  render () { 
+    // this.capturer.capture(this.mainCanvas)
+  }
 
   // Background for timeout counters
   createBackground1 () {
-    // Add background
-    this.backgroundLayer1 = document.createElement('canvas')
+    // Add background if not exist
+    if (!this.backgroundLayer1) {
+      this.backgroundLayer1 = this.backgroundLayer1 || document.createElement('canvas')
+      let width = this.game.world.width
+      let height = this.game.world.height
+
+      this.backgroundLayer1.width = width
+      this.backgroundLayer1.height = height
+
+      let backgroundCtx = this.backgroundLayer1.getContext('2d')
+
+      document.getElementById('background1').appendChild(this.backgroundLayer1)
+
+    }
+    
+    this.updateBackgroundLayer1()
+  }
+
+  updateBackgroundLayer1 () {
+    // Add the count down progress
+    let backgroundCtx = this.backgroundLayer1.getContext('2d')
+    let countPercentage = (1 - Math.min(this.countDown / 10, 1)).toFixed(2)
+    // let countPercentagePow = 1 - Math.min(Math.pow(this.countDown / 10, 2), 1)
     let width = this.game.world.width
     let height = this.game.world.height
 
-    this.backgroundLayer1.width = width
-    this.backgroundLayer1.height = height
+    backgroundCtx.clearRect(0, 0, width, height)
+    backgroundCtx.fillStyle = 'rgba(255' + ', 0, 0, ' + (0.2 * countPercentage).toFixed(2) + ')'
+    backgroundCtx.fillRect(0, height * countPercentage, width, height)
 
-    let backgroundCtx = this.backgroundLayer1.getContext('2d')
-
-    backgroundCtx.fillStyle = 'rgba(0, 0, 0, 0)'
-    backgroundCtx.fillRect(0, 0, width, height)
-
-    document.getElementById('background1').appendChild(this.backgroundLayer1)
   }
 
   // Background for kill boss counters
   createBackground2 () {
-    // Add background
-    this.backgroundLayer2 = document.createElement('div')
-    this.backgroundLayer2.classList.add('centerText')
-    let width = this.game.world.width
-    let height = this.game.world.height
+    // Add background if not exist
+    if (!this.backgroundLayer2) {
+      this.backgroundLayer2 = this.backgroundLayer2 || document.createElement('canvas')
+      this.backgroundLayer2.classList.add('centerText')
+      let width = this.game.world.width
+      let height = this.game.world.height
 
-    this.backgroundLayer2.style.width = width + 'px'
-    this.backgroundLayer2.style.height = height + 'px'
-    this.backgroundLayer2.style.color = 'rgba(124, 93, 96, 0.3)'
-    this.backgroundLayer2.style.fontFamily = 'Bangers'
-    this.backgroundLayer2.style.fontSize = Math.min(width, height) + 'px'
+      this.backgroundLayer2.width = width
+      this.backgroundLayer2.height = height
+
+      let backgroundCtx = this.backgroundLayer2.getContext('2d')
+      backgroundCtx.fillStyle = 'rgba(124, 93, 96, 0.3)'
+      backgroundCtx.font = Math.min(width, height) + 'px Bangers'
+      backgroundCtx.textAlign = 'center'
+      backgroundCtx.textBaseline = 'middle'
+
+      document.getElementById('background2').appendChild(this.backgroundLayer2)
+
+    }
 
     this.updateBackgroundLayer2()
-
-    document.getElementById('background2').appendChild(this.backgroundLayer2)
   }
 
   updateBackgroundLayer2 () {
-    this.backgroundLayer2.innerHTML = '<span>' + this.gameLevel + '</span>'
+    let backgroundCtx = this.backgroundLayer2.getContext('2d')
+    let width = this.game.world.width
+    let height = this.game.world.height
+    backgroundCtx.clearRect(0, 0, width, height)
+    backgroundCtx.fillText(this.gameLevel, width / 2, height / 2)
   }
 
   createCountDownText () {
@@ -155,16 +214,7 @@ export default class extends Phaser.State {
       this.countDown = (this.countDown - 0.1).toFixed(1)
       // this.scoreText.text = 'Remain: ' + this.countDown + 's'
 
-      // Add the count down progress
-      let backgroundCtx = this.backgroundLayer1.getContext('2d')
-      let countPercentage = (1 - Math.min(this.countDown / 10, 1)).toFixed(2)
-      // let countPercentagePow = 1 - Math.min(Math.pow(this.countDown / 10, 2), 1)
-      let width = this.game.world.width
-      let height = this.game.world.height
-
-      backgroundCtx.clearRect(0, 0, width, height)
-      backgroundCtx.fillStyle = 'rgba(255' + ', 0, 0, ' + (0.2 * countPercentage).toFixed(2) + ')'
-      backgroundCtx.fillRect(0, height * countPercentage, width, height)
+      this.updateBackgroundLayer1()
 
       // Keep counting down
       this.countSecTimout = setTimeout(this.countSec.bind(this), 100)
@@ -354,6 +404,9 @@ export default class extends Phaser.State {
 
   killBoss (ninja, boss) {
     let that = this
+    // Capture the moment!
+    this.captureDataURLs[0] = this.mainCanvas.toDataURL('image/png')
+
     // this.stopCount()
     // this.recordHighscore()
     boss.kill()
@@ -458,6 +511,8 @@ export default class extends Phaser.State {
     this.numOfBaddies = this.gameLevel
     this.updateBackgroundLayer2()
     this.addBaddie()
+
+    // this.capturer.capture(this.mainCanvas)
   }
 
   prevLevel (prevStep = 1) {
@@ -470,10 +525,129 @@ export default class extends Phaser.State {
   gameOver () {
     clearTimeout(this.countSecTimout)
 
-    this.state.start('Game Over', true, false, {
-      killBossCount: this.gameLevel - 1,
-      longestTimeCount: this.longestTimeCount
+    // this.capturer.stop()
+    // this.capturer.save()
+
+    // Capture the backgrounds
+    this.captureDataURLs.push(this.backgroundLayer1.toDataURL('image/png'))
+    this.captureDataURLs.push(this.backgroundLayer2.toDataURL('image/png'))
+
+    // this.state.start('Game Over', true, false, {
+    //   killBossCount: this.gameLevel - 1,
+    //   longestTimeCount: this.longestTimeCount,
+    //   captureDataURLs: this.captureDataURLs
+    // })
+
+    // TODOs
+    // Create images to share
+    console.log(this.createCapturePng())
+    // Create game over text
+    this.createFrontground1()
+
+    // Listen on restart trigger
+    let restartKey = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR)
+    restartKey.onDown.addOnce(this.gameRestart, this)
+
+  }
+
+  createCapturePng () {
+    let imageCanvasBuffer = document.createElement('canvas')
+    let imageCanvasBufferCtx = imageCanvasBuffer.getContext('2d')
+    this.captureDataURLs.forEach((dataURL) => {
+      let img = new Image()
+      img.src = dataURL
+      imageCanvasBufferCtx.drawImage(img, 0, 0)
     })
+    // TODO: check if detached imageCanvasBuffer is memory leak
+    return imageCanvasBuffer.toDataURL('image/png')
+  }
+
+  // Front ground for game over text
+  createFrontground1 () {
+    if (!this.frontgroundContainer1) {
+      this.frontgroundContainer1 = document.createElement('div')
+      this.frontgroundContainer1.classList.add('centerText')
+      let width = this.game.world.width
+      let height = this.game.world.height
+      let style = this.frontgroundContainer1.style
+      style.width = width + 'px'
+      style.height = height + 'px'
+      style.fontFamily = 'Bangers'
+      style.color = '#FFFFFF'
+      style.backgroundColor = 'rgba(200,200,200,0.2)'
+
+      document.getElementById('frontground1').appendChild(this.frontgroundContainer1)
+    }
+
+    this.updateFrontground1()
+  }
+
+  updateFrontground1 () {
+    // Show text
+    let gameOverText = "<h1>Game Over</h1>\n<h3>You killed " 
+      + (this.gameLevel - 1 || 0) 
+      + " bosses</h3>\n<h3>Your longest time count is " 
+      + (this.longestTimeCount || 0) 
+      + "s</h3>\n<h1 class=\"restart\">Restart!</h1>"
+
+    let gameOverTextElement = document.createElement('div')
+    gameOverTextElement.innerHTML = gameOverText
+
+    // let text = this.add.text(
+    //   this.world.centerX, 
+    //   this.game.height * 0.1, 
+    //   gameOverText, 
+    //   { font: '16px Arial', fill: '#dddddd', align: 'center' })
+
+    let gameOverTitle = document.createElement('h1')
+    gameOverTitle.innerText = 'GAME OVER'
+    this.frontgroundContainer1.appendChild(gameOverTitle)
+
+    let gameOverRank = document.createElement('strong')
+    gameOverRank.innerText = 'You rank ' 
+      + this.gameRank 
+      + '(top' 
+      + (this.gameRank / this.totalPlayCount).toFixed(4) * 100
+      + '%) from all players!'
+  }
+
+  // Background for kill boss counters
+  createBackground2 () {
+    // Add background
+    this.backgroundLayer2 = this.backgroundLayer2 || document.createElement('canvas')
+    this.backgroundLayer2.classList.add('centerText')
+    let width = this.game.world.width
+    let height = this.game.world.height
+
+    this.backgroundLayer2.width = width
+    this.backgroundLayer2.height = height
+
+    let backgroundCtx = this.backgroundLayer2.getContext('2d')
+    backgroundCtx.fillStyle = 'rgba(124, 93, 96, 0.3)'
+    backgroundCtx.font = Math.min(width, height) + 'px Bangers'
+    backgroundCtx.textAlign = 'center'
+    backgroundCtx.textBaseline = 'middle'
+
+    this.updateBackgroundLayer2()
+    document.getElementById('background2').appendChild(this.backgroundLayer2)
+  }
+
+  updateBackgroundLayer2 () {
+    let backgroundCtx = this.backgroundLayer2.getContext('2d')
+    let width = this.game.world.width
+    let height = this.game.world.height
+    backgroundCtx.clearRect(0, 0, width, height)
+    backgroundCtx.fillText(this.gameLevel, width / 2, height / 2)
+  }
+
+
+  gameRestart () {
+    this.resetGame()
+    this.state.start('Game')
+  }
+
+  resetGame () {
+    this.captureDataURLs = []
   }
 
 }

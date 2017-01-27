@@ -9,10 +9,11 @@ export default class extends Phaser.State {
   }
 
   create () {
+    // let mainCanvas = document.getElementById('content').getElementsByTagName('canvas')[0]
+    // this.captureImgDataURL = mainCanvas.toDataURL('image/png')
+
     // Create background layer3 
     this.createBackground3()
-
-    
 
     // const bannerText = 'Phaser + ES6 + Webpack'
     // let banner = this.add.text(this.world.centerX, this.game.height - 80, bannerText)
@@ -30,7 +31,9 @@ export default class extends Phaser.State {
     }
   }
 
-  // Background for kill boss counters
+  // TODO: USE this.stateProp.captureDataURLs to draw one image and one text canvas layer
+
+  // Background for text layer
   createBackground3 () {
     // Add background
     this.backgroundLayer3 = document.createElement('div')
@@ -50,7 +53,21 @@ export default class extends Phaser.State {
 
   updateBackgroundLayer3 () {
 
-    let gameOverText = "<h1>Game Over</h1>\n<h3>You killed " + (this.stateProp.killBossCount || 0) + " bosses</h3>\n<h3>Your longest time count is " + (this.stateProp.longestTimeCount || 0) + "s</h3>\n<h1 class=\"restart\">Restart!</h1>"
+    // Background
+    let captureImgElement = document.createElement('img')
+    captureImgElement.classList.add('captureImg')
+    captureImgElement.setAttribute('src', this.stateProp.captureDataURL)
+    this.backgroundLayer3.appendChild(captureImgElement)
+
+    // Show text
+    let gameOverText = "<h1>Game Over</h1>\n<h3>You killed " 
+      + (this.stateProp.killBossCount || 0) 
+      + " bosses</h3>\n<h3>Your longest time count is " 
+      + (this.stateProp.longestTimeCount || 0) 
+      + "s</h3>\n<h1 class=\"restart\">Restart!</h1>"
+
+    let gameOverTextElement = document.createElement('div')
+    gameOverTextElement.innerHTML = gameOverText
 
     // let text = this.add.text(
     //   this.world.centerX, 
@@ -58,13 +75,17 @@ export default class extends Phaser.State {
     //   gameOverText, 
     //   { font: '16px Arial', fill: '#dddddd', align: 'center' })
 
-    this.backgroundLayer3.innerHTML = '<h1>' + gameOverText + '</h1>'
+    this.backgroundLayer3.appendChild(gameOverTextElement)
 
   }
 
   gameRestart () {
-    this.backgroundLayer3.parentNode.removeChild(this.backgroundLayer3)
+    this.resetBackgroundLayer()
     this.state.start('Game')
+  }
+
+  resetBackgroundLayer () {
+    this.backgroundLayer3.parentNode.removeChild(this.backgroundLayer3)
   }
 
 }
