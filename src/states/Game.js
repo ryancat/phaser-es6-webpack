@@ -5,6 +5,8 @@ import Ninja from '../sprites/Ninja'
 import Baddie from '../sprites/Baddie'
 import Boss from '../sprites/Boss'
 
+import api from '../services/api'
+
 export default class extends Phaser.State {
 
   constructor () {
@@ -148,15 +150,40 @@ export default class extends Phaser.State {
 
   fetchPlayStat () {
     let that = this
-    this.playStatPromise = new Promise((resolve, reject) => {
-      // Get async counts
-      setTimeout(() => {
-        resolve(100)
-      }, 5000)
-    })
-    .then((val) => {
-      console.log('play stat', val)
-      that.playStat = val
+    this.playStatPromise = api.getPlayCountStat()
+      .then((response) => {
+        console.log('play stat', response)
+        that.playStat = response.body
+      })
+  }
+
+  saveGameLog () {
+    // sign: { type: String, default: 'A Ninja has no name', trim: true },
+//   playTimes: [{
+//     level: { type: Number, default: 1 },
+//     duration: { type: Number, default: 0 }
+//   }],
+//   level: { type: Number, default: 1 }
+// }
+
+    // Create game log
+    let gameLog = {
+      sign: this.playerSign,
+      playTimes: this.measureStat.sessions.map((session) => {
+        return {
+          level: session.gameLevel,
+          duration: session.end - session.start
+        }
+      }),
+      level: this.gameLevel
+    }
+
+    // Save to server
+    api.saveGameLog(gameLog)
+    .then((response) => {
+      console.log('save game log', response)
+    }, (error) => {
+      console.log('error', error)
     })
   }
 
@@ -450,6 +477,9 @@ export default class extends Phaser.State {
     // })
     // 
     
+    // Stop current measure session
+    this.endMeasureSession()
+
     // When we kill the boss, we are going to the next level
     this.nextLevel()
 
@@ -490,9 +520,7 @@ export default class extends Phaser.State {
     this.currentMeasureSession = {
       start: Date.now(),
       end: null,
-      gameLevel: this.gameLevel,
-      bossDeadTime: [],
-      snapshots: []
+      gameLevel: this.gameLevel
     }
 
     this.measureStat.sessions.push(this.currentMeasureSession)
@@ -505,28 +533,28 @@ export default class extends Phaser.State {
     this.currentMeasureSession = null
   }
 
-  addMeasure (key) {
+  // addMeasure (key) {
 
-    switch(key) {
-      case 'boss dead':
-        this.currentMeasureSession.bossDeadTime.push(Date.now())
+  //   switch(key) {
+  //     case 'boss dead':
+  //       this.currentMeasureSession.bossDeadTime.push(Date.now())
 
-      default:
-        this.currentMeasureSession.snapshots.push(this.baddieStates)
-    }
-  }
+  //     default:
+  //       this.currentMeasureSession.snapshots.push(this.baddieStates)
+  //   }
+  // }
 
-  record (key) {
-    if (!this.currentMeasureSession) {
-      return
-    }
+  // record (key) {
+  //   if (!this.currentMeasureSession) {
+  //     return
+  //   }
 
-    this.currentMeasureSession.name = key
+  //   // this.currentMeasureSession.name = key
 
-    // After recording, end the current measure session
-    this.endMeasureSession()
+  //   // After recording, end the current measure session
+  //   this.endMeasureSession()
     
-  }
+  // }
 
   printMeasure () {
     console.log('all:', this.measureStat)
@@ -539,20 +567,27 @@ export default class extends Phaser.State {
     this.updateBackgroundLayer2()
     this.addBaddie()
 
+    // Start measure session
+    this.startMeasureSession()
+
     // this.capturer.capture(this.mainCanvas)
   }
 
-  prevLevel (prevStep = 1) {
-    this.gameLevel -= prevStep
-    this.numOfBaddies = this.gameLevel
-    this.removeBaddie()
-  }
+  // prevLevel (prevStep = 1) {
+  //   this.gameLevel -= prevStep
+  //   this.numOfBaddies = this.gameLevel
+  //   this.removeBaddie()
+  // }
 
   ////// GAME OVER
   gameOver () {
     let that = this
     // Stop count down timer
     clearTimeout(this.countSecTimout)
+
+    // Stop measure session
+    this.endMeasureSession()
+    this.measureStat.end = Date.now()
 
     // Kill ninja if it's still alive
     if (this.ninja.alive) {
@@ -592,6 +627,9 @@ export default class extends Phaser.State {
     // Listen on restart trigger
     let restartKey = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR)
     restartKey.onDown.addOnce(this.gameRestart, this)
+
+    // Save game log
+    this.saveGameLog()
 
   }
 

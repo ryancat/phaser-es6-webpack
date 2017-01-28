@@ -28,6 +28,9 @@ module.exports = function (app) {
   // app.post('/api/search/issue', issuesController.searchIssue);
   // app.get('/api/user/getCurrentUser', usersController.getCurrentUser);
 
+  app.get('/gameLog/playCountStat', gameLogController.getPlayCountStat);
+  app.post('/gameLog/save', gameLogController.saveGameLog);
+
   /**
    * Error handling
    */

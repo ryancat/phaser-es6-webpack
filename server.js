@@ -13,6 +13,8 @@ var app = express();
 ////////////////////////
 // Import all schemas //
 ////////////////////////
+require('./src/models/GameLog');
+
 
 // Connect to mongodb
 mongoose.connect(dbConfig.url);

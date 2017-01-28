@@ -3,33 +3,21 @@
 // Imports - 3rd party
 const mongoose = require('mongoose');
 
-const GameLog = new mongoose.Schema({
+const GameLogSchema = new mongoose.Schema({
   sign: { type: String, default: 'A Ninja has no name', trim: true },
-
-
-  
-  summary: { type: String, default: '', trim: true },
-  viewCount: { type: Number, default: 0 },
-  cues: [{
-    description: { type: String, default: '', trim: true },
-    phase: { type: String, default: 'TODO', trim: true, 
-      // validation
-      enum: ['TODO', 'QUOTING', 'APPROVING', 'FIXING', 'DONE'] }
+  playTimes: [{
+    level: { type: Number, default: 1 },
+    duration: { type: Number, default: 0 }
   }],
-  tags: [{ type: String, trim: true }],
-  description: { type: String, default: '', trim: true },
-  step: { type: Number, default: 1, min: 1, max: 5 },
-  location: { type: String, default: '', trim: true },
-  category: { type: String, default: '', trim: true },
-  isUrgent: { type: Boolean, default: false }
+  level: { type: Number, default: 1 }
 }, {
   timestamps: true
 });
 
 // Validation
-IssueSchema.path('summary').validate(function (summary) {
-  return summary.length;
-}, 'Summary cannot be blank');
+// GameLogSchema.path('summary').validate(function (summary) {
+//   return summary.length;
+// }, 'Summary cannot be blank');
 
 // IssueSchema.path('location').validate((location) => {
 //   return location.length;
@@ -40,7 +28,10 @@ IssueSchema.path('summary').validate(function (summary) {
 // }, 'Category cannot be blank');
 
 // Methods
-IssueSchema.methods = {};
+GameLogSchema.methods = {};
+
+// Static methods
+GameLogSchema.statics = {};
 
 // Create issue model
-mongoose.model('Issue', IssueSchema);
+mongoose.model('GameLog', GameLogSchema);
