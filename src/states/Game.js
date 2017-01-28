@@ -531,7 +531,13 @@ export default class extends Phaser.State {
   ////// GAME OVER
   gameOver () {
     let that = this
+    // Stop count down timer
     clearTimeout(this.countSecTimout)
+
+    // Kill ninja if it's still alive
+    if (this.ninja.alive) {
+      this.ninja.kill()
+    }
 
     // this.capturer.stop()
     // this.capturer.save()
