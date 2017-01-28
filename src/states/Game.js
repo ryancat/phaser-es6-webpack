@@ -32,20 +32,20 @@ export default class extends Phaser.State {
     }
 
     // if (device.touch && !device.desktop) {
-      if (window.DeviceOrientationEvent) {
-        window.addEventListener('deviceorientation', (eventData) => {
-          if (that.orientation.startBeta === null) {
-            that.orientation.startBeta = eventData.beta
-          }
+    if (window.DeviceOrientationEvent) {
+      window.addEventListener('deviceorientation', (eventData) => {
+        if (that.orientation.startBeta === null) {
+          that.orientation.startBeta = eventData.beta
+        }
 
-          if (that.orientation.startGamma === null) {
-            that.orientation.startGamma = eventData.gamma
-          }
+        if (that.orientation.startGamma === null) {
+          that.orientation.startGamma = eventData.gamma
+        }
 
-          that.orientation.beta = eventData.beta
-          that.orientation.gamma = eventData.gamma
-        });
-      }
+        that.orientation.beta = eventData.beta
+        that.orientation.gamma = eventData.gamma
+      });
+    }
     // }
 
     // Config (immutable)
@@ -68,16 +68,8 @@ export default class extends Phaser.State {
     this.captureDataURLs = []
 
     // Get state from server
-    this.totalPlayCountPromise = new Promise((resolve, reject) => {
-      // Get async counts
-      setTimeout(() => {
-        resolve(100)
-      }, 5000)
-    })
-    .then((val) => {
-      console.log('total play count', val)
-      that.totalPlayCount = val
-    })
+    this.fetchTotalPlayCount()
+    this.fetchPlayStat()
 
     // Measures
     this.initMeasure()
@@ -138,6 +130,34 @@ export default class extends Phaser.State {
 
   render () { 
     // this.capturer.capture(this.mainCanvas)
+  }
+
+  fetchTotalPlayCount () {
+    let that = this
+    this.totalPlayCountPromise = new Promise((resolve, reject) => {
+      // Get async counts
+      setTimeout(() => {
+        resolve(100)
+      }, 5000)
+    })
+    .then((val) => {
+      console.log('total play count', val)
+      that.totalPlayCount = val
+    })
+  }
+
+  fetchPlayStat () {
+    let that = this
+    this.playStatPromise = new Promise((resolve, reject) => {
+      // Get async counts
+      setTimeout(() => {
+        resolve(100)
+      }, 5000)
+    })
+    .then((val) => {
+      console.log('play stat', val)
+      that.playStat = val
+    })
   }
 
   // Background for timeout counters
