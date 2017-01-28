@@ -69,7 +69,14 @@ export default class extends Phaser.State {
 
     // Get state from server
     this.totalPlayCountPromise = new Promise((resolve, reject) => {
-
+      // Get async counts
+      setTimeout(() => {
+        resolve(100)
+      }, 5000)
+    })
+    .then((val) => {
+      console.log('total play count', val)
+      that.totalPlayCount = val
     })
 
     // Measures
@@ -523,6 +530,7 @@ export default class extends Phaser.State {
 
   ////// GAME OVER
   gameOver () {
+    let that = this
     clearTimeout(this.countSecTimout)
 
     // this.capturer.stop()
@@ -542,6 +550,17 @@ export default class extends Phaser.State {
     // Create images to share
     console.log(this.createCapturePng())
     // Create game over text
+    this.gameRankPromise = new Promise((resolve, reject) => {
+      // Load server game rank
+      setTimeout(() => {
+        resolve(51)
+      }, 2000)
+    })
+    .then((val) => {
+      console.log('game rank', val)
+      that.gameRank = val
+    })
+
     this.createFrontground1()
 
     // Listen on restart trigger
@@ -564,81 +583,107 @@ export default class extends Phaser.State {
 
   // Front ground for game over text
   createFrontground1 () {
+    let that = this
+
     if (!this.frontgroundContainer1) {
       this.frontgroundContainer1 = document.createElement('div')
+      this.frontgroundContainer1.id = 'frontgroundContainer1'
       this.frontgroundContainer1.classList.add('centerText')
       let width = this.game.world.width
       let height = this.game.world.height
       let style = this.frontgroundContainer1.style
       style.width = width + 'px'
       style.height = height + 'px'
-      style.fontFamily = 'Bangers'
-      style.color = '#FFFFFF'
-      style.backgroundColor = 'rgba(200,200,200,0.2)'
+      
 
-      document.getElementById('frontground1').appendChild(this.frontgroundContainer1)
+      // Show text
+      let gameOverTitle = document.createElement('h1')
+      gameOverTitle.innerText = 'GAME OVER'
+      this.frontgroundContainer1.appendChild(gameOverTitle)
+
+      // Show rank
+      let gameOverRank = document.createElement('span')
+      gameOverRank.id = 'gameOverRank'
+      gameOverRank.innerText = 'Loading rank...'
+      this.frontgroundContainer1.appendChild(gameOverRank)
+
+      // Interactives
+      let interactiveContainer = document.createElement('div')
+      interactiveContainer.classList.add('horizontalAlign')
+      this.frontgroundContainer1.appendChild(interactiveContainer)
+
+      // Restart button
+      let restartBtn = document.createElement('h2')
+      restartBtn.innerText = 'Restart'
+      interactiveContainer.appendChild(restartBtn)
+
+      restartBtn.addEventListener('touchend', (evt) => {
+        that.gameRestart()
+      })
+
+      // Share button
+      let shareBtn = document.createElement('h2')
+      shareBtn.innerText = 'Share'
+      interactiveContainer.appendChild(shareBtn)
+
+      shareBtn.addEventListener('touchend', (evt) => {
+        that.shareGame()
+      })
+
     }
 
     this.updateFrontground1()
   }
 
   updateFrontground1 () {
-    // Show text
-    let gameOverText = "<h1>Game Over</h1>\n<h3>You killed " 
-      + (this.gameLevel - 1 || 0) 
-      + " bosses</h3>\n<h3>Your longest time count is " 
-      + (this.longestTimeCount || 0) 
-      + "s</h3>\n<h1 class=\"restart\">Restart!</h1>"
+    let that = this
+    let gameOverRank = this.frontgroundContainer1.querySelector('#gameOverRank')
 
-    let gameOverTextElement = document.createElement('div')
-    gameOverTextElement.innerHTML = gameOverText
-
-    // let text = this.add.text(
-    //   this.world.centerX, 
-    //   this.game.height * 0.1, 
-    //   gameOverText, 
-    //   { font: '16px Arial', fill: '#dddddd', align: 'center' })
-
-    let gameOverTitle = document.createElement('h1')
-    gameOverTitle.innerText = 'GAME OVER'
-    this.frontgroundContainer1.appendChild(gameOverTitle)
-
-    let gameOverRank = document.createElement('strong')
-    gameOverRank.innerText = 'You rank ' 
-      + this.gameRank 
-      + '(top' 
-      + (this.gameRank / this.totalPlayCount).toFixed(4) * 100
-      + '%) from all players!'
+    // When total play count and game rank are resolved
+    // we will show the detail information
+    Promise.all([this.totalPlayCountPromise, this.gameRankPromise])
+    .then((values) => {
+      gameOverRank.innerText = 'You rank ' 
+        + that.gameRank 
+        + ' (top ' 
+        + (that.gameRank / that.totalPlayCount).toFixed(4) * 100
+        + '%) from all players!'
+    })
+    
+    let frontGround1Wrapper = document.getElementById('frontground1')
+    if (frontGround1Wrapper.childNodes.length === 0) {
+      frontGround1Wrapper.appendChild(this.frontgroundContainer1)
+    }
   }
 
-  // Background for kill boss counters
-  createBackground2 () {
-    // Add background
-    this.backgroundLayer2 = this.backgroundLayer2 || document.createElement('canvas')
-    this.backgroundLayer2.classList.add('centerText')
-    let width = this.game.world.width
-    let height = this.game.world.height
+  // // Background for kill boss counters
+  // createBackground2 () {
+  //   // Add background
+  //   this.backgroundLayer2 = this.backgroundLayer2 || document.createElement('canvas')
+  //   this.backgroundLayer2.classList.add('centerText')
+  //   let width = this.game.world.width
+  //   let height = this.game.world.height
 
-    this.backgroundLayer2.width = width
-    this.backgroundLayer2.height = height
+  //   this.backgroundLayer2.width = width
+  //   this.backgroundLayer2.height = height
 
-    let backgroundCtx = this.backgroundLayer2.getContext('2d')
-    backgroundCtx.fillStyle = 'rgba(124, 93, 96, 0.3)'
-    backgroundCtx.font = Math.min(width, height) + 'px Bangers'
-    backgroundCtx.textAlign = 'center'
-    backgroundCtx.textBaseline = 'middle'
+  //   let backgroundCtx = this.backgroundLayer2.getContext('2d')
+  //   backgroundCtx.fillStyle = 'rgba(124, 93, 96, 0.3)'
+  //   backgroundCtx.font = Math.min(width, height) + 'px Bangers'
+  //   backgroundCtx.textAlign = 'center'
+  //   backgroundCtx.textBaseline = 'middle'
 
-    this.updateBackgroundLayer2()
-    document.getElementById('background2').appendChild(this.backgroundLayer2)
-  }
+  //   this.updateBackgroundLayer2()
+  //   document.getElementById('background2').appendChild(this.backgroundLayer2)
+  // }
 
-  updateBackgroundLayer2 () {
-    let backgroundCtx = this.backgroundLayer2.getContext('2d')
-    let width = this.game.world.width
-    let height = this.game.world.height
-    backgroundCtx.clearRect(0, 0, width, height)
-    backgroundCtx.fillText(this.gameLevel, width / 2, height / 2)
-  }
+  // updateBackgroundLayer2 () {
+  //   let backgroundCtx = this.backgroundLayer2.getContext('2d')
+  //   let width = this.game.world.width
+  //   let height = this.game.world.height
+  //   backgroundCtx.clearRect(0, 0, width, height)
+  //   backgroundCtx.fillText(this.gameLevel, width / 2, height / 2)
+  // }
 
 
   gameRestart () {
@@ -648,6 +693,12 @@ export default class extends Phaser.State {
 
   resetGame () {
     this.captureDataURLs = []
+    this.frontgroundContainer1.parentNode.removeChild(this.frontgroundContainer1)
+  }
+
+  shareGame () {
+    // TODO: how to share game in wechat?
+    console.log('Try to share game...')
   }
 
 }
