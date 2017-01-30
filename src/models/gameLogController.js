@@ -25,23 +25,133 @@ const GameLog = mongoose.model('GameLog');
 const gameLogController = {
 
   /**
-   * Get the play count statistic data
-   * @param  {[type]}   req  [description]
-   * @param  {[type]}   res  [description]
-   * @param  {Function} next [description]
-   * @return {[type]}        [description]
+   * Get the play stat data by level
    */
-  getPlayCountStat: function (req, res, next) {
-    return GameLog.find(function (err, gameLogs) {
+  getPlayStatByLevel: function (req, res, next) {
+    // return GameLog.find({
+    //   type: 
+    // }, function (err, playStatByLevel) {
+    //   if (err) {
+    //     return next(err);
+    //   }
 
+    //   res.send({
+    //     playStatByLevel: playStatByLevel
+    //   });
+    // })
+
+    // Do aggregation by level
+    // Send something like:
+    // {
+    //    countByLevel: [10000, 1000, 100, 1]
+    //    durationByLevel: [2000, 1500, 5000, 10000]
+    // }
+    // 
+    // {
+    //    1: {
+    //      count: 10000,
+    //      duration: 2000
+    //    },
+    //    
+    //    2: {
+    //      count: 1000,
+    //      duration: 400
+    //    }
+    // } // Or array
+    
+    // Document
+    // { 
+    // "_id" : ObjectId("588cd993a6201334c85d6b55"), 
+    // "updatedAt" : ISODate("2017-01-28T17:49:07.378Z"), 
+    // "createdAt" : ISODate("2017-01-28T17:49:07.378Z"), 
+    // "level" : 4, 
+    // "playTimes" : [ 
+    //   { "_id" : ObjectId("588cd993a6201334c85d6b59"), 
+    //     "duration" : 5653, 
+    //     "level" : 1 }, 
+    //   { "_id" : ObjectId("588cd993a6201334c85d6b58"), 
+    //     "duration" : 1527, 
+    //     "level" : 2 }, 
+    //   { "_id" : ObjectId("588cd993a6201334c85d6b57"), 
+    //     "duration" : 2168, 
+    //     "level" : 3 }, 
+    //   { "_id" : ObjectId("588cd993a6201334c85d6b56"), 
+    //   "duration" : 2443, 
+    //   "level" : 4 } 
+    // ], 
+    // "sign" : "A Ninja has no name", 
+    // "__v" : 0 }
+
+    // mongoDB query db.gamelogs.aggregate({$unwind: "$playTimes"}, {$group: { "_id": "$playTimes.level", "playCount": {$sum: 1}, "duration": {$avg: "$playTimes.duration" } }})
+
+    GameLog.aggregate([
+      {
+        '$unwind': '$playTimes'
+      }, {
+      // Grouping pipeline
+      '$group': {
+        _id: '$playTimes.level',
+        playCount: { '$sum': 1 },
+        duration: { '$avg': '$playTimes.duration' }
+      }
+    }], function (err, aggregateResult) {
       if (err) {
-        return next(err);
+        next(err);
       }
 
-      res.send(gameLogs);
+      res.send(aggregateResult);
 
     });
+
+
   },
+
+  // /**
+  //  * Update the game stat document
+  //  */
+  // updateGameStat: function (req, res, next) {
+
+  //   // let gameLog = {
+  //   //   // TODO: create player signature
+  //   //   sign: this.playerSign,
+  //   //   playTimes: this.measureStat.sessions.map((session) => {
+  //   //     return {
+  //   //       level: session.gameLevel,
+  //   //       duration: session.end - session.start
+  //   //     }
+  //   //   }),
+  //   //   level: this.gameLevel,
+  //   //   
+  //   // }
+
+  //   var newGameLog = req.body
+
+  //   // Find existing game stat
+  //   gameLog.findOne({
+  //     logType: 'gameStat'
+  //   }, function (err, gameStat) {
+
+  //     if (err) {
+  //       return next(err);
+  //     }
+
+
+
+  //   });
+
+  //   var gameStat = req.body.gameStat;
+
+  //   return gameLog.findOneAndUpdate({
+  //     'logType': 'gameStat'
+  //   }, gameStat, {upsert: true}, function (err, updateResult) {
+  //     if (err) {
+  //       return next(err);
+  //     }
+
+  //     next(req, res, next);
+  //   });
+
+  // },
 
   saveGameLog: function (req, res, next) {
     // Create GameLog model

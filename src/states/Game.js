@@ -70,7 +70,7 @@ export default class extends Phaser.State {
     this.captureDataURLs = []
 
     // Get state from server
-    this.fetchTotalPlayCount()
+    // this.fetchTotalPlayCount()
     this.fetchPlayStat()
 
     // Measures
@@ -134,40 +134,28 @@ export default class extends Phaser.State {
     // this.capturer.capture(this.mainCanvas)
   }
 
-  fetchTotalPlayCount () {
-    let that = this
-    this.totalPlayCountPromise = new Promise((resolve, reject) => {
-      // Get async counts
-      setTimeout(() => {
-        resolve(100)
-      }, 5000)
-    })
-    .then((val) => {
-      console.log('total play count', val)
-      that.totalPlayCount = val
-    })
-  }
+  // fetchTotalPlayCount () {
+  //   let that = this
+  //   this.totalPlayCountPromise = api.getPlayCountStat()
+  //   .then((response) => {
+  //     console.log('total play count', response.body.totalCount)
+  //     that.totalPlayCount = response.body.totalCount
+  //   })
+  // }
 
   fetchPlayStat () {
     let that = this
-    this.playStatPromise = api.getPlayCountStat()
-      .then((response) => {
-        console.log('play stat', response)
-        that.playStat = response.body
-      })
+    this.playStatByLevelPromise = api.getPlayStatByLevel()
+    .then((response) => {
+      console.log('play stat by level', response)
+      that.playStatByLevel = response.body
+    })
   }
 
   saveGameLog () {
-    // sign: { type: String, default: 'A Ninja has no name', trim: true },
-//   playTimes: [{
-//     level: { type: Number, default: 1 },
-//     duration: { type: Number, default: 0 }
-//   }],
-//   level: { type: Number, default: 1 }
-// }
-
     // Create game log
     let gameLog = {
+      // TODO: create player signature
       sign: this.playerSign,
       playTimes: this.measureStat.sessions.map((session) => {
         return {
@@ -185,6 +173,7 @@ export default class extends Phaser.State {
     }, (error) => {
       console.log('error', error)
     })
+
   }
 
   // Background for timeout counters
@@ -611,16 +600,16 @@ export default class extends Phaser.State {
     // Create images to share
     console.log(this.createCapturePng())
     // Create game over text
-    this.gameRankPromise = new Promise((resolve, reject) => {
-      // Load server game rank
-      setTimeout(() => {
-        resolve(51)
-      }, 2000)
-    })
-    .then((val) => {
-      console.log('game rank', val)
-      that.gameRank = val
-    })
+    // this.gameRankPromise = new Promise((resolve, reject) => {
+    //   // Load server game rank
+    //   setTimeout(() => {
+    //     resolve(51)
+    //   }, 2000)
+    // })
+    // .then((val) => {
+    //   console.log('game rank', val)
+    //   that.gameRank = val
+    // })
 
     this.createFrontground1()
 
@@ -705,13 +694,28 @@ export default class extends Phaser.State {
 
     // When total play count and game rank are resolved
     // we will show the detail information
-    Promise.all([this.totalPlayCountPromise, this.gameRankPromise])
-    .then((values) => {
+    this.playStatByLevelPromise
+    .then(() => {
+      // Total play count is the same to anyone at first level
+      let totalPlayCount = _.find(that.playStatByLevel, { _id: 1 }).playCount
+      let gameCountAtCurrentLevel, 
+          gameRank,
+          currentLevelStat
+
+      if (currentLevelStat = _.find(that.playStatByLevel, { _id: that.gameLevel })) {
+        gameCountAtCurrentLevel = currentLevelStat.playCount
+      } else {
+        gameCountAtCurrentLevel = 0
+      }
+
+      gameRank = gameCountAtCurrentLevel
+
       gameOverRank.innerText = 'You rank ' 
-        + that.gameRank 
+        + gameRank 
         + ' (top ' 
-        + (that.gameRank / that.totalPlayCount).toFixed(4) * 100
+        + (gameRank / totalPlayCount).toFixed(4) * 100
         + '%) from all players!'
+          
     })
     
     let frontGround1Wrapper = document.getElementById('frontground1')
@@ -719,6 +723,13 @@ export default class extends Phaser.State {
       frontGround1Wrapper.appendChild(this.frontgroundContainer1)
     }
   }
+
+  // getPlayCountAtLevel (level) {
+  //   Promise.all([this.playStatByLevelPromise])
+  //   .then(() => {
+
+  //   })
+  // }
 
   // // Background for kill boss counters
   // createBackground2 () {
