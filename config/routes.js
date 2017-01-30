@@ -21,21 +21,12 @@ module.exports = function (app) {
   });
 
   // API
-  // app.get('/api/issue/issueList', issuesController.getAllIssues);
-  // app.post('/api/issue/save', issuesController.save);
-  // app.post('/api/issue/moveIssuePhase', issuesController.moveIssuePhase);
-  // app.post('/api/issue/updateIssueCue', issuesController.updateIssueCue);
-  // app.post('/api/search/issue', issuesController.searchIssue);
-  // app.get('/api/user/getCurrentUser', usersController.getCurrentUser);
-
   app.get('/gameLog/playStatByLevel', gameLogController.getPlayStatByLevel);
   app.post('/gameLog/save', gameLogController.saveGameLog);
-  // app.post('/gameLog/updateGameStat', gameLogController.updateGameStat);
 
   /**
    * Error handling
    */
-
   app.use(function (err, req, res, next) {
     console.error(err.stack);
   });

@@ -15,10 +15,4 @@ export default {
     .send(gameLog);
   }
 
-  // updateGameStat: (gameStat = {}) => {
-  //   return request
-  //   .post('/gameLog/save')
-  //   .set({ 'X-Requested-With': 'XMLHttpRequest' })
-  //   .send(gameStat);
-  // }
 }

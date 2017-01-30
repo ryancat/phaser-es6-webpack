@@ -648,7 +648,6 @@ export default class extends Phaser.State {
       style.width = width + 'px'
       style.height = height + 'px'
       
-
       // Show text
       let gameOverTitle = document.createElement('h1')
       gameOverTitle.innerText = 'GAME OVER'
@@ -723,43 +722,6 @@ export default class extends Phaser.State {
       frontGround1Wrapper.appendChild(this.frontgroundContainer1)
     }
   }
-
-  // getPlayCountAtLevel (level) {
-  //   Promise.all([this.playStatByLevelPromise])
-  //   .then(() => {
-
-  //   })
-  // }
-
-  // // Background for kill boss counters
-  // createBackground2 () {
-  //   // Add background
-  //   this.backgroundLayer2 = this.backgroundLayer2 || document.createElement('canvas')
-  //   this.backgroundLayer2.classList.add('centerText')
-  //   let width = this.game.world.width
-  //   let height = this.game.world.height
-
-  //   this.backgroundLayer2.width = width
-  //   this.backgroundLayer2.height = height
-
-  //   let backgroundCtx = this.backgroundLayer2.getContext('2d')
-  //   backgroundCtx.fillStyle = 'rgba(124, 93, 96, 0.3)'
-  //   backgroundCtx.font = Math.min(width, height) + 'px Bangers'
-  //   backgroundCtx.textAlign = 'center'
-  //   backgroundCtx.textBaseline = 'middle'
-
-  //   this.updateBackgroundLayer2()
-  //   document.getElementById('background2').appendChild(this.backgroundLayer2)
-  // }
-
-  // updateBackgroundLayer2 () {
-  //   let backgroundCtx = this.backgroundLayer2.getContext('2d')
-  //   let width = this.game.world.width
-  //   let height = this.game.world.height
-  //   backgroundCtx.clearRect(0, 0, width, height)
-  //   backgroundCtx.fillText(this.gameLevel, width / 2, height / 2)
-  // }
-
 
   gameRestart () {
     this.resetGame()

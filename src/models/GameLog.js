@@ -19,14 +19,6 @@ const GameLogSchema = new mongoose.Schema({
 //   return summary.length;
 // }, 'Summary cannot be blank');
 
-// IssueSchema.path('location').validate((location) => {
-//   return location.length;
-// }, 'Location cannot be blank');
-
-// IssueSchema.path('category').validate((category) => {
-//   return category.length;
-// }, 'Category cannot be blank');
-
 // Methods
 GameLogSchema.methods = {};
 
