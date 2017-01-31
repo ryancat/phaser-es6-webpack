@@ -1,6 +1,8 @@
 // Database configuration
 
+const devUrl = 'mongodb://localhost/dotNinja',
+      prodUrl = 'mongodb://heroku_jfpphlpm:djp1pl55ueo1c3m9giofenjsvi@ds137759.mlab.com:37759/heroku_jfpphlpm'
+
 module.exports = {
-  url: 'mongodb://localhost/dotNinja'
-  // url: 'mongodb' + process.env.AIRHOADB_PORT.replace(/^(.+)(\:\/\/.*)$/, '$2') + '/airhoa'
+  url: __DEV__ ? devUrl : prodUrl
 };
