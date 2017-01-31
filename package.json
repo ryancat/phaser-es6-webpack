@@ -13,6 +13,9 @@
   },
   "license": "MIT",
   "devDependencies": {
+    
+  },
+  "dependencies": {
     "babel-core": "^6.18.2",
     "babel-loader": "^6.2.8",
     "babel-polyfill": "^6.16.0",
@@ -25,9 +28,8 @@
     "eslint-plugin-standard": "^2.0.1",
     "expose-loader": "^0.7.1",
     "webfontloader": "^1.6.27",
-    "webpack": "^2.2.1"
-  },
-  "dependencies": {
+    "webpack": "^2.2.1",
+
     "body-parser": "^1.16.0",
     "ccapture.js": "^1.0.6",
     "express": "^4.14.0",
