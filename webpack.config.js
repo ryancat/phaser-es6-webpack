@@ -30,7 +30,10 @@ module.exports = {
   watch: true,
   plugins: [
     definePlugin,
-    // new webpack.optimize.CommonsChunkPlugin(/* chunkName= */'vendor', /* filename= */'vendor.bundle.js'),
+    new webpack.optimize.CommonsChunkPlugin({
+      filename: 'vendor.bundle.js',
+      name: 'vendor'
+    }),
     new BrowserSyncPlugin({
       host: process.env.IP || 'localhost',
       port: process.env.PORT || 3000,

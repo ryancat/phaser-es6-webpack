@@ -9,7 +9,7 @@
     "deploy": "webpack --config webpack.production.config.js",
     "start": "node server.js",
     "test": "standard",
-    "heroku-postbuild": "webpack"
+    "heroku-postbuild": "npm run deploy"
   },
   "license": "MIT",
   "devDependencies": {

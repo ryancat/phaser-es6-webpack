@@ -38,9 +38,12 @@ module.exports = {
         warnings: false
       }
     }),
-    new webpack.optimize.OccurenceOrderPlugin(),
+    new webpack.optimize.OccurrenceOrderPlugin(),
     new webpack.optimize.DedupePlugin(),
-    new webpack.optimize.CommonsChunkPlugin(/* chunkName= */'vendor', /* filename= */'vendor.bundle.js')
+    new webpack.optimize.CommonsChunkPlugin({
+      filename: 'vendor.bundle.js',
+      name: 'vendor'
+    })
   ],
   module: {
     loaders: [
