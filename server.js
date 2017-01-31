@@ -44,11 +44,11 @@ db.once('open', function () {
 
 });
 
-app.listen(80, function (err) {
+app.listen(process.env.PORT || 8080, function (err) {
   if (err) {
     console.log(err);
     return;
   }
 
-  console.log('Listening at http://localhost:3333');
+  console.log('Listening at http://localhost:' + process.env.PORT || 8080);
 });
