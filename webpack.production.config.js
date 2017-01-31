@@ -47,11 +47,11 @@ module.exports = {
   ],
   module: {
     loaders: [
-      { test: /\.json$/, loader: 'json' },
-      { test: /\.js$/, loader: 'babel', include: path.join(__dirname, 'src') },
-      { test: /pixi\.js/, loader: 'expose?PIXI' },
-      { test: /phaser-split\.js$/, loader: 'expose?Phaser' },
-      { test: /p2\.js/, loader: 'expose?p2' }
+      { test: /\.json$/, loader: 'json-loader' },
+      { test: /\.js$/, loader: 'babel-loader', include: path.join(__dirname, 'src') },
+      { test: /pixi\.js/, loader: 'expose-loader?PIXI' },
+      { test: /phaser-split\.js$/, loader: 'expose-loader?Phaser' },
+      { test: /p2\.js/, loader: 'expose-loader?p2' }
     ]
   },
   node: {
