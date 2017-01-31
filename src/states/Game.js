@@ -696,8 +696,8 @@ export default class extends Phaser.State {
     this.playStatByLevelPromise
     .then(() => {
       // Total play count is the same to anyone at first level
-      let totalPlayCount = _.find(that.playStatByLevel, { _id: 1 }).playCount
-      let gameCountAtCurrentLevel, 
+      let totalPlayCount = _.find(that.playStatByLevel, { _id: 1 }).playCount + 1,
+          gameCountAtCurrentLevel, 
           gameRank,
           currentLevelStat
 
@@ -707,7 +707,7 @@ export default class extends Phaser.State {
         gameCountAtCurrentLevel = 0
       }
 
-      gameRank = gameCountAtCurrentLevel
+      gameRank = gameCountAtCurrentLevel + 1
 
       gameOverRank.innerText = 'You rank ' 
         + gameRank 
@@ -736,6 +736,8 @@ export default class extends Phaser.State {
   shareGame () {
     // TODO: how to share game in wechat?
     console.log('Try to share game...')
+    let dataURL = this.createCapturePng()
+    window.open(dataURL)
   }
 
 }

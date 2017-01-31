@@ -8,7 +8,7 @@ export default class extends Baddie {
   constructor ({ game, x, y, asset, initVelocityX, initVelocityY }) {
     super({game, x, y, asset, initVelocityX, initVelocityY})
 
-    this.tint = 0xff7b60;
+    this.tint = 0x75db59
   }
 
   update () {

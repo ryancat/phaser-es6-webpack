@@ -22,6 +22,8 @@ export default class extends Phaser.Sprite {
 
     this.body.velocity.x = this.currentVelocityX;
     this.body.velocity.y = this.currentVelocityY;
+
+    this.tint = 0xff7b60
   }
 
   update () {
