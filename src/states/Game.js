@@ -99,7 +99,7 @@ export default class extends Phaser.State {
           that.orientation.gamma = eventData.gamma
           that.devText = eventData.beta + ', ' + eventData.gamma
         }, true);
-      }, 500)
+      }, 1000)
     }
 
     // Config (immutable)
@@ -1034,7 +1034,7 @@ export default class extends Phaser.State {
       })
 
       document.getElementById('frontground2').appendChild(shareContainer)
-      
+
       // This will crash wechat browser
       // window.open(that.createCapturePng())
     })
