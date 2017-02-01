@@ -1010,7 +1010,31 @@ export default class extends Phaser.State {
     .then(() => {
       // Create share text
       that.createShareFontDataUrl()
-      window.open(that.createCapturePng())
+
+      let shareContainer = document.createElement('div')
+      shareContainer.classList.add('centerText')
+
+      // Create shared image
+      let image = new Image()
+      image.src = that.createCapturePng()
+      shareContainer.appendChild(image)
+
+      let description = document.createElement('span')
+      description.classList.add('shareImageDescription')
+      description.innerText = 'Save the image and share!'
+      shareContainer.appendChild(description)
+
+      let closeBtn = document.createElement('button')
+      closeBtn.classList.add('shareImageCloseBtn')
+      closeBtn.innerText = 'X'
+      shareContainer.appendChild(closeBtn)
+
+      closeBtn.addEventListener('click', () => {
+        document.getElementById('frontground2').removeChild(shareContainer)
+      })
+
+      document.getElementById('frontground2').appendChild(shareContainer)
+      // window.open(that.createCapturePng())
     })
   }
 
