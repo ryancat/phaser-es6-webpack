@@ -1034,6 +1034,8 @@ export default class extends Phaser.State {
       })
 
       document.getElementById('frontground2').appendChild(shareContainer)
+      
+      // This will crash wechat browser
       // window.open(that.createCapturePng())
     })
   }
