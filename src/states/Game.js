@@ -921,7 +921,10 @@ export default class extends Phaser.State {
 // TODO:
 // x1. player should die at some point
 // x2. motivation to kill boss (time limit!)
-// 3. Personal ranking
-// 4. All ranking
-// 5. Share
-// 6. Mobile support
+// ?3. Personal ranking
+// x4. All ranking
+// x5. Share
+// x6. Mobile support
+// 7. Adaptive second count (using average time)
+// 8. Show live rank
+// 9. User signature
