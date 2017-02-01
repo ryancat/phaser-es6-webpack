@@ -587,8 +587,8 @@ export default class extends Phaser.State {
     // this.capturer.save()
 
     // Capture the backgrounds
-    this.captureDataURLs.push(this.backgroundLayer1.toDataURL('image/png'))
-    this.captureDataURLs.push(this.backgroundLayer2.toDataURL('image/png'))
+    this.captureDataURLs[1] = this.backgroundLayer1.toDataURL('image/png')
+    this.captureDataURLs[2] = this.backgroundLayer2.toDataURL('image/png')
 
     // this.state.start('Game Over', true, false, {
     //   killBossCount: this.gameLevel - 1,
@@ -622,14 +622,33 @@ export default class extends Phaser.State {
 
   }
 
+  createShareTextLayer () {
+
+  }
+
   createCapturePng () {
-    let imageCanvasBuffer = document.createElement('canvas')
+    let that = this,
+        imageCanvasBuffer = document.createElement('canvas')
+
+    imageCanvasBuffer.width = this.game.world.width
+    imageCanvasBuffer.height = this.game.world.height
+
     let imageCanvasBufferCtx = imageCanvasBuffer.getContext('2d')
+
+    // Mix all captured data urls 
     this.captureDataURLs.forEach((dataURL) => {
       let img = new Image()
       img.src = dataURL
       imageCanvasBufferCtx.drawImage(img, 0, 0)
     })
+
+    // let img = new Image()
+    // img.src = imageCanvasBuffer.toDataURL()
+    // imageCanvasBufferCtx.drawImage(img, 0, 0)
+
+    // Test: put the imageCanvasBuffer onto screen
+    // document.getElementById('frontground1').appendChild(imageCanvasBuffer)
+
     // TODO: check if detached imageCanvasBuffer is memory leak
     return imageCanvasBuffer.toDataURL('image/png')
   }
@@ -735,7 +754,6 @@ export default class extends Phaser.State {
 
   shareGame () {
     // TODO: how to share game in wechat?
-    console.log('Try to share game...')
     let dataURL = this.createCapturePng()
     window.open(dataURL)
   }
