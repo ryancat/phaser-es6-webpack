@@ -7,47 +7,47 @@ import Boss from '../sprites/Boss'
 
 import api from '../services/api'
 
-const KILL_RATES_MAP = {
-  'First Blood': {
+const KILL_RATES_MAP = [{
+    name: 'First Blood',
     min: 1,
     max: 1
-  },
-  'Double Kills': {
+  },{
+    name: 'Double Kills',
     min: 2,
     max: 2
-  },
-  'Triple Kills': {
+  },{
+    name: 'Triple Kills',
     min: 3,
     max: 3
-  },
-  'Mega Kill': {
+  },{
+    name: 'Mega Kill',
     min: 4,
     max: 6
-  },
-  'Unstoppedable': {
+  },{
+    name: 'Unstoppedable',
     min: 7,
     max: 9
-  },
-  'Ultra kill': {
+  },{
+    name: 'Ultra kill',
     min: 10,
     max: 14
-  },
-  'Dominating': {
+  },{
+    name: 'Dominating',
     min: 15,
     max: 19
-  },
-  'Monster Kill': {
+  },{
+    name: 'Monster Kill',
     min: 20,
     max: 24
-  },
-  'God Like': {
+  },{
+    name: 'God Like',
     min: 25,
     max: 29
-  },
-  'Rampage': {
+  },{
+    name: 'Rampage',
     min: 30
   }
-}
+]
 
 export default class extends Phaser.State {
 
@@ -126,6 +126,7 @@ export default class extends Phaser.State {
   create () {
     this.createBackground1()
     this.createBackground2()
+    this.createBackground3()
 
     this.createCountDownText()
     // this.createHighScoreText()
@@ -278,8 +279,44 @@ export default class extends Phaser.State {
     let backgroundCtx = this.backgroundLayer2.getContext('2d')
     let width = this.game.world.width
     let height = this.game.world.height
+
     backgroundCtx.clearRect(0, 0, width, height)
     backgroundCtx.fillText(this.gameLevel, width / 2, height / 2)
+  }
+
+  // Background for kill boss counters
+  createBackground3 () {
+    // Add background if not exist
+    if (!this.backgroundLayer3) {
+      this.backgroundLayer3 = this.backgroundLayer3 || document.createElement('canvas')
+      this.backgroundLayer3.classList.add('centerText')
+      let width = this.game.world.width
+      let height = this.game.world.height
+
+      this.backgroundLayer3.width = width
+      this.backgroundLayer3.height = height
+
+      let backgroundCtx = this.backgroundLayer3.getContext('2d')
+      backgroundCtx.fillStyle = 'rgba(124, 93, 96, 0.3)'
+      backgroundCtx.font = Math.floor(Math.min(width, height) / 8) + 'px Bangers'
+      backgroundCtx.textAlign = 'center'
+      backgroundCtx.textBaseline = 'middle'
+
+      document.getElementById('background3').appendChild(this.backgroundLayer3)
+
+    }
+
+    this.updateBackgroundLayer3()
+  }
+
+  updateBackgroundLayer3 () {
+    let backgroundCtx = this.backgroundLayer3.getContext('2d')
+    let width = this.game.world.width
+    let height = this.game.world.height
+
+    backgroundCtx.clearRect(0, 0, width, height)
+    backgroundCtx.rotate(Math.PI * 2 * Math.random())
+    backgroundCtx.fillText(this.gameRateText, width * Math.random(), height * Math.random())
   }
 
   createCountDownText () {
@@ -593,9 +630,21 @@ export default class extends Phaser.State {
 
   ////// LEVELS
   nextLevel (nextStep = 1) {
+    let that = this
     this.gameLevel += nextStep
     this.numOfBaddies = this.gameLevel
+
+    // Get the kill rate
+    let gameRate = _.find(KILL_RATES_MAP, (rate) => {
+      let min = rate.min || -Infinity
+      let max = rate.max || Infinity
+      return that.gameLevel >= min && that.gameLevel <= max
+    })
+
+    this.gameRateText = gameRate.name
+
     this.updateBackgroundLayer2()
+    this.updateBackgroundLayer3()
     this.addBaddie()
 
     // Start measure session
