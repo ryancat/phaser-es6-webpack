@@ -7,18 +7,47 @@ import Boss from '../sprites/Boss'
 
 import api from '../services/api'
 
-const KILL_RATES = [
-  'First Blood',
-  'Double Kills',
-  'Triple Kills',
-  'Mega Kill',
-  'Unstoppedable',
-  'Ultra kill',
-  'Dominating',
-  'Monster Kill',
-  'God Like',
-  'Rampage'
-]
+const KILL_RATES_MAP = {
+  'First Blood': {
+    min: 1,
+    max: 1
+  },
+  'Double Kills': {
+    min: 2,
+    max: 2
+  },
+  'Triple Kills': {
+    min: 3,
+    max: 3
+  },
+  'Mega Kill': {
+    min: 4,
+    max: 6
+  },
+  'Unstoppedable': {
+    min: 7,
+    max: 9
+  },
+  'Ultra kill': {
+    min: 10,
+    max: 14
+  },
+  'Dominating': {
+    min: 15,
+    max: 19
+  },
+  'Monster Kill': {
+    min: 20,
+    max: 24
+  },
+  'God Like': {
+    min: 25,
+    max: 29
+  },
+  'Rampage': {
+    min: 30
+  }
+}
 
 export default class extends Phaser.State {
 
@@ -77,7 +106,7 @@ export default class extends Phaser.State {
     this.mainCanvas = document.getElementById('content').getElementsByTagName('canvas')[0]
     this.spriteScale = this.game.world.width / 600
     this.baddieStates = []
-    this.gameLevel = 1
+    this.gameLevel = 0
     this.numOfBaddies = this.gameLevel
     this.longestTimeCount = this.gameConfig.countDown
     this.captureDataURLs = []
@@ -133,9 +162,6 @@ export default class extends Phaser.State {
     // })
 
     // this.capturer.start()
-    
-    // Capture
-    this.captureDataURLs.push(this.mainCanvas.toDataURL())
   }
 
   update () {
@@ -264,7 +290,7 @@ export default class extends Phaser.State {
   countSec () {
     if (this.countDown <= 0) {
       // Game over
-      this.gameOver()
+      this.killNinja(this.ninja)
     }
     else {
       this.countDown = (this.countDown - 0.1).toFixed(1)
@@ -421,16 +447,19 @@ export default class extends Phaser.State {
   }
 
   collideNinjaBaddies (ninja, baddie) {
-    this.killNinja(ninja, baddie)
+    this.killNinja(ninja)
   }
 
   collideNinjaBoss (ninja, boss) {
     this.killBoss(ninja, boss)
   }
 
-  killNinja (ninja, baddie) {
+  killNinja (ninja) {
     let that = this
     
+    // Capture
+    this.captureDataURLs[0] = this.mainCanvas.toDataURL()
+
     // this.stopCount()
     // this.recordHighscore()
     ninja.kill()
@@ -724,17 +753,27 @@ export default class extends Phaser.State {
     this.playStatByLevelPromise
     .then(() => {
       // Total play count is the same to anyone at first level
-      let totalPlayCount = _.find(that.playStatByLevel, { _id: 1 }).playCount + 1,
+      let existingPlayCount,
+          totalPlayCount,
           gameCountAtCurrentLevel, 
           gameRank,
+          existingPlayStat,
           currentLevelStat
 
+      // Get existing play stat
+      if (existingPlayStat = _.find(that.playStatByLevel, { _id: 0 })) {
+        existingPlayCount = existingPlayStat.playCount
+      } else {
+        existingPlayCount = 0
+      }
+      totalPlayCount = existingPlayCount + 1
+
+      // Get current level stat
       if (currentLevelStat = _.find(that.playStatByLevel, { _id: that.gameLevel })) {
         gameCountAtCurrentLevel = currentLevelStat.playCount
       } else {
         gameCountAtCurrentLevel = 0
       }
-
       gameRank = gameCountAtCurrentLevel + 1
 
       that.gameOverRankText = 'You rank ' 
