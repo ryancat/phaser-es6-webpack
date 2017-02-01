@@ -53,6 +53,9 @@ const KILL_RATES_MAP = [{
   }
 ]
 
+const PLAYER_SIGN_TEXT = 'A Ninja has no name'
+const DEFAULT_PLAYER_SIGN_LIMIT = 8
+
 export default class extends Phaser.State {
 
   constructor () {
@@ -76,7 +79,9 @@ export default class extends Phaser.State {
     // Adding accelerator support for mobile
     this.orientation = {
       startBeta: null,
-      startGamma: null
+      startGamma: null,
+      beta: null,
+      gamma: null
     }
 
     // if (device.touch && !device.desktop) {
@@ -92,7 +97,8 @@ export default class extends Phaser.State {
 
         that.orientation.beta = eventData.beta
         that.orientation.gamma = eventData.gamma
-      });
+        that.devText = eventData.beta + ', ' + eventData.gamma
+      }, true);
     }
     // }
 
@@ -103,7 +109,9 @@ export default class extends Phaser.State {
       numOfBaddies: 20,
       allowNinjaPassBorder: false,
       ninjaLives: 3,
-      countDown: 10
+      countDown: 10,
+      playerSignLimit: DEFAULT_PLAYER_SIGN_LIMIT,
+      // dev: true
     }
 
     // Game inner states
@@ -115,6 +123,7 @@ export default class extends Phaser.State {
     this.numOfBaddies = this.gameLevel
     this.longestTimeCount = this.gameConfig.countDown
     this.captureDataURLs = []
+    this.countDown = this.gameConfig.countDown || 10
 
     // Get state from server
     // this.fetchTotalPlayCount()
@@ -133,7 +142,12 @@ export default class extends Phaser.State {
     this.createBackground2()
     this.createBackground3()
 
-    this.createCountDownText()
+    // When in dev mode, output some more information
+    if (this.gameConfig.dev) {
+      this.createBackground4()
+    }
+
+    // this.createCountDownText()
     // this.createHighScoreText()
     this.countSec()
 
@@ -201,7 +215,7 @@ export default class extends Phaser.State {
     // Create game log
     let gameLog = {
       // TODO: create player signature
-      sign: this.playerSign,
+      sign: this.playerSignText || PLAYER_SIGN_TEXT,
       playTimes: this.measureStat.sessions.map((session) => {
         return {
           level: session.gameLevel,
@@ -326,10 +340,25 @@ export default class extends Phaser.State {
     backgroundCtx.fillText(this.gameRateText, width * Math.random(), height * Math.random())
   }
 
-  createCountDownText () {
-    this.countDown = this.gameConfig.countDown || 10
-    // this.scoreText = this.game.add.text(16, this.game.world.height - 40, 'Remain: ' + this.countDown + 's', { fontSize: '32px', fill: '#FFF' })
+  createBackground4 () {
+    this.backgroundLayer4 = this.backgroundLayer4 || document.createElement('div')
+    let width = this.game.world.width
+    let height = this.game.world.height
+
+    this.backgroundLayer4.width = width
+    this.backgroundLayer4.height = height
+
+    this.backgroundLayer4.innerText = this.devText
+
+    if (document.getElementById('background4').childNodes.length === 0) {
+      document.getElementById('background4').appendChild(this.backgroundLayer4)
+    }
   }
+
+  // createCountDownText () {
+  //   this.countDown = this.gameConfig.countDown || 10
+  //   // this.scoreText = this.game.add.text(16, this.game.world.height - 40, 'Remain: ' + this.countDown + 's', { fontSize: '32px', fill: '#FFF' })
+  // }
 
   countSec () {
     if (this.countDown <= 0) {
@@ -341,6 +370,10 @@ export default class extends Phaser.State {
       // this.scoreText.text = 'Remain: ' + this.countDown + 's'
 
       this.createBackground1()
+
+      if (this.gameConfig.dev) {
+        this.createBackground4()
+      }
 
       // Keep counting down
       this.countSecTimout = setTimeout(this.countSec.bind(this), 100)
@@ -771,13 +804,14 @@ export default class extends Phaser.State {
       this.frontgroundContainer1.appendChild(this.gameOverRank)
 
       // User signature
-      this.userSign = document.createElement('input')
-      this.userSign.classList.add('userSign')
-      this.userSign.setAttribute('placeholder','Your name?')
-      this.frontgroundContainer1.appendChild(this.userSign)
+      this.playerSign = document.createElement('input')
+      this.playerSign.classList.add('playerSign')
+      this.playerSign.setAttribute('placeholder','Your name?')
+      this.playerSign.setAttribute('maxlength', this.gameConfig.playerSignLimit || DEFAULT_PLAYER_SIGN_LIMIT)
+      this.frontgroundContainer1.appendChild(this.playerSign)
 
-      this.userSign.addEventListener('change', (evt) => {
-        that.userSignText = evt.target.value
+      this.playerSign.addEventListener('change', (evt) => {
+        that.playerSignText = evt.target.value
       })
 
       // Interactives
@@ -805,7 +839,7 @@ export default class extends Phaser.State {
 
       // Events listener globally
       this.frontgroundContainer1.addEventListener('touchstart', () =>  {
-        that.userSignText = that.userSign.value
+        that.playerSignText = that.playerSign.value.substring(0, this.gameConfig.playerSignLimit || DEFAULT_PLAYER_SIGN_LIMIT)
       })
 
       // Add front ground to document
@@ -820,7 +854,7 @@ export default class extends Phaser.State {
 
     this.gameOverTitle.innerText = this.gameRateText
     this.gameOverRank.innerText = 'Loading rank...'
-    this.userSign.setAttribute('value', this.userSignText || '')
+    this.playerSign.setAttribute('value', this.playerSignText || '')
 
     // When total play count and game rank are resolved
     // we will show the detail information
@@ -884,7 +918,7 @@ export default class extends Phaser.State {
     imageCanvasBufferCtx.font = Math.floor(Math.min(width, height) / 10) + 'px Bangers'
     imageCanvasBufferCtx.textAlign = 'center'
     imageCanvasBufferCtx.textBaseline = 'middle'
-    let gameRate = this.userSignText ? this.userSignText + ' got ' + this.gameRateText : this.gameRateText
+    let gameRate = this.playerSignText ? this.playerSignText + ' got ' + this.gameRateText : this.gameRateText
     imageCanvasBufferCtx.fillText(gameRate, width / 2, height / 2)
 
     this.captureDataURLs[4] = imageCanvasBuffer.toDataURL()
