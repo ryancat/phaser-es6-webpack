@@ -961,7 +961,7 @@ export default class extends Phaser.State {
     let imageCanvasBufferCtx = imageCanvasBuffer.getContext('2d')
 
     // Create game rating text
-    imageCanvasBufferCtx.fillStyle = 'rgba(200, 200, 200, 0.8)'
+    imageCanvasBufferCtx.fillStyle = 'rgba(255, 170, 0, 0.7)'
     imageCanvasBufferCtx.font = Math.floor(Math.min(width, height) / 10) + 'px Bangers'
     imageCanvasBufferCtx.textAlign = 'center'
     imageCanvasBufferCtx.textBaseline = 'middle'
