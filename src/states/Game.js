@@ -295,12 +295,42 @@ export default class extends Phaser.State {
   }
 
   updateBackgroundLayer2 () {
-    let backgroundCtx = this.backgroundLayer2.getContext('2d')
-    let width = this.game.world.width
-    let height = this.game.world.height
+    let that = this,
+        backgroundCtx = this.backgroundLayer2.getContext('2d'),
+        width = this.game.world.width,
+        height = this.game.world.height,
+        fontSize = Math.floor(Math.min(width, height) / 20)
 
     backgroundCtx.clearRect(0, 0, width, height)
+    backgroundCtx.font = Math.min(width, height) + 'px Bangers'
+    backgroundCtx.fillStyle = 'rgba(124, 93, 96, 0.3)'
     backgroundCtx.fillText(this.gameLevel, width / 2, height / 2)
+
+    // Update the count per level
+    this.playStatByLevelPromise
+    .then(() => {
+      let currentLevelPlayCount = that.getPlayCountByLevel(that.playStatByLevel, that.gameLevel),
+          nextLevelPlayCount = that.getPlayCountByLevel(that.playStatByLevel, that.gameLevel + 1),
+          deadPlayCount = currentLevelPlayCount - nextLevelPlayCount,
+          levelStatText = 'No one reach this level yet...'
+
+      if (!that.ninja.alive) {
+        levelStatText = 'You dead here ...'
+      } else {
+        if (deadPlayCount === 0) {
+          levelStatText = 'No one dead at this level!'
+        } else if (deadPlayCount === 1) { 
+          levelStatText = 'Only one dead here!'
+        } else {
+          levelStatText = deadPlayCount + ' plays dead here!'
+        }
+      }
+
+      backgroundCtx.font = fontSize + 'px Bangers'
+      backgroundCtx.fillStyle = 'rgba(255, 170, 0, 0.7)'
+      backgroundCtx.fillText(levelStatText, width / 2, fontSize * 1.5)
+
+    })
   }
 
   // Background for kill boss counters
@@ -714,6 +744,9 @@ export default class extends Phaser.State {
       this.ninja.kill()
     }
 
+    // Update the kill boss count background
+    this.createBackground2()
+
     // this.capturer.stop()
     // this.capturer.save()
 
@@ -869,19 +902,21 @@ export default class extends Phaser.State {
           currentLevelStat
 
       // Get existing play stat
-      if (existingPlayStat = _.find(that.playStatByLevel, { _id: 0 })) {
-        existingPlayCount = existingPlayStat.playCount
-      } else {
-        existingPlayCount = 0
-      }
+      // if (existingPlayStat = _.find(that.playStatByLevel, { _id: 0 })) {
+      //   existingPlayCount = existingPlayStat.playCount
+      // } else {
+      //   existingPlayCount = 0
+      // }
+      existingPlayCount = that.getPlayCountByLevel(that.playStatByLevel)
       totalPlayCount = existingPlayCount + 1
 
       // Get current level stat
-      if (currentLevelStat = _.find(that.playStatByLevel, { _id: that.gameLevel })) {
-        gameCountAtCurrentLevel = currentLevelStat.playCount
-      } else {
-        gameCountAtCurrentLevel = 0
-      }
+      // if (currentLevelStat = _.find(that.playStatByLevel, { _id: that.gameLevel })) {
+      //   gameCountAtCurrentLevel = currentLevelStat.playCount
+      // } else {
+      //   gameCountAtCurrentLevel = 0
+      // }
+      gameCountAtCurrentLevel = that.getPlayCountByLevel(that.playStatByLevel, that.gameLevel)
       gameRank = gameCountAtCurrentLevel + 1
 
       that.gameOverRank.innerText = 'You rank ' 
@@ -900,6 +935,18 @@ export default class extends Phaser.State {
     // if (frontGround1Wrapper.childNodes.length === 0) {
     //   frontGround1Wrapper.appendChild(this.frontgroundContainer1)
     // }
+  }
+
+  getPlayCountByLevel (playStatByLevel = [], level = 0) {
+    // Get existing play stat
+    let playCount = 0,
+        playStat
+
+    if (playStat = _.find(playStatByLevel, { _id: level })) {
+      playCount = playStat.playCount
+    }
+
+    return playCount
   }
 
   createShareFontDataUrl () {
@@ -927,7 +974,7 @@ export default class extends Phaser.State {
     // Creat game result text
     let fontSize = Math.floor(Math.min(width, height) / 20)
     imageCanvasBufferCtx.font = fontSize + 'px Bangers'
-    imageCanvasBufferCtx.fillText(this.gameOverRank.innerText, width / 2, height / 2  + fontSize * 1.5)
+    imageCanvasBufferCtx.fillText(this.gameOverRank.innerText, width / 2, height / 2 + fontSize * 1.5)
 
     this.captureDataURLs[5] = imageCanvasBuffer.toDataURL()
     imageCanvasBufferCtx.clearRect(0, 0, width, height)
