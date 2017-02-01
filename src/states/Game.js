@@ -770,6 +770,16 @@ export default class extends Phaser.State {
       this.gameOverRank = document.createElement('span')
       this.frontgroundContainer1.appendChild(this.gameOverRank)
 
+      // User signature
+      this.userSign = document.createElement('input')
+      this.userSign.classList.add('userSign')
+      this.userSign.setAttribute('placeholder','Your name?')
+      this.frontgroundContainer1.appendChild(this.userSign)
+
+      this.userSign.addEventListener('change', (evt) => {
+        that.userSignText = evt.target.value
+      })
+
       // Interactives
       let interactiveContainer = document.createElement('div')
       interactiveContainer.classList.add('horizontalAlign')
@@ -793,6 +803,11 @@ export default class extends Phaser.State {
         that.shareGame()
       })
 
+      // Events listener globally
+      this.frontgroundContainer1.addEventListener('touchstart', () =>  {
+        that.userSignText = that.userSign.value
+      })
+
       // Add front ground to document
       document.getElementById('frontground1').appendChild(this.frontgroundContainer1)
     }
@@ -805,6 +820,7 @@ export default class extends Phaser.State {
 
     this.gameOverTitle.innerText = this.gameRateText
     this.gameOverRank.innerText = 'Loading rank...'
+    this.userSign.setAttribute('value', this.userSignText || '')
 
     // When total play count and game rank are resolved
     // we will show the detail information
@@ -868,7 +884,8 @@ export default class extends Phaser.State {
     imageCanvasBufferCtx.font = Math.floor(Math.min(width, height) / 10) + 'px Bangers'
     imageCanvasBufferCtx.textAlign = 'center'
     imageCanvasBufferCtx.textBaseline = 'middle'
-    imageCanvasBufferCtx.fillText(this.gameRateText, width / 2, height / 2)
+    let gameRate = this.userSignText ? this.userSignText + ' got ' + this.gameRateText : this.gameRateText
+    imageCanvasBufferCtx.fillText(gameRate, width / 2, height / 2)
 
     this.captureDataURLs[4] = imageCanvasBuffer.toDataURL()
     imageCanvasBufferCtx.clearRect(0, 0, width, height)
@@ -928,3 +945,4 @@ export default class extends Phaser.State {
 // 7. Adaptive second count (using average time)
 // 8. Show live rank
 // 9. User signature
+// 10. User top ranking list
