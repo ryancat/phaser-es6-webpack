@@ -84,23 +84,23 @@ export default class extends Phaser.State {
       gamma: null
     }
 
-    // if (device.touch && !device.desktop) {
     if (window.DeviceOrientationEvent) {
-      window.addEventListener('deviceorientation', (eventData) => {
-        if (that.orientation.startBeta === null) {
-          that.orientation.startBeta = eventData.beta
-        }
+      setTimeout(() => {
+        window.addEventListener('deviceorientation', (eventData) => {
+          if (that.orientation.startBeta === null) {
+            that.orientation.startBeta = eventData.beta
+          }
 
-        if (that.orientation.startGamma === null) {
-          that.orientation.startGamma = eventData.gamma
-        }
+          if (that.orientation.startGamma === null) {
+            that.orientation.startGamma = eventData.gamma
+          }
 
-        that.orientation.beta = eventData.beta
-        that.orientation.gamma = eventData.gamma
-        that.devText = eventData.beta + ', ' + eventData.gamma
-      }, true);
+          that.orientation.beta = eventData.beta
+          that.orientation.gamma = eventData.gamma
+          that.devText = eventData.beta + ', ' + eventData.gamma
+        }, true);
+      }, 500)
     }
-    // }
 
     // Config (immutable)
     this.gameConfig = {
