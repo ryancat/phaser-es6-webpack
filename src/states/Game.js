@@ -8,43 +8,47 @@ import Boss from '../sprites/Boss'
 import api from '../services/api'
 
 const KILL_RATES_MAP = [{
-    name: 'First Blood',
+    name: 'Newbie!',
+    min: 0,
+    max: 0
+  },{
+    name: 'First Blood!',
     min: 1,
     max: 1
   },{
-    name: 'Double Kills',
+    name: 'Double Kills!',
     min: 2,
     max: 2
   },{
-    name: 'Triple Kills',
+    name: 'Triple Kills!',
     min: 3,
     max: 3
   },{
-    name: 'Mega Kill',
+    name: 'Mega Kill!',
     min: 4,
     max: 6
   },{
-    name: 'Unstoppedable',
+    name: 'Unstoppedable!',
     min: 7,
     max: 9
   },{
-    name: 'Ultra kill',
+    name: 'Ultra kill!',
     min: 10,
     max: 14
   },{
-    name: 'Dominating',
+    name: 'Dominating!',
     min: 15,
     max: 19
   },{
-    name: 'Monster Kill',
+    name: 'Monster Kill!',
     min: 20,
     max: 24
   },{
-    name: 'God Like',
+    name: 'God Like!',
     min: 25,
     max: 29
   },{
-    name: 'Rampage',
+    name: 'Rampage!',
     min: 30
   }
 ]
@@ -107,6 +111,7 @@ export default class extends Phaser.State {
     this.spriteScale = this.game.world.width / 600
     this.baddieStates = []
     this.gameLevel = 0
+    this.gameRateText = KILL_RATES_MAP[0].name
     this.numOfBaddies = this.gameLevel
     this.longestTimeCount = this.gameConfig.countDown
     this.captureDataURLs = []
@@ -310,12 +315,14 @@ export default class extends Phaser.State {
   }
 
   updateBackgroundLayer3 () {
-    let backgroundCtx = this.backgroundLayer3.getContext('2d')
-    let width = this.game.world.width
-    let height = this.game.world.height
+    let backgroundCtx = this.backgroundLayer3.getContext('2d'),
+        width = this.game.world.width,
+        height = this.game.world.height,
+        fontSize = Math.floor(Math.min(width, height) / 8),
+        rotateAngle = Math.PI * 2 * Math.random()
 
-    backgroundCtx.clearRect(0, 0, width, height)
-    backgroundCtx.rotate(Math.PI * 2 * Math.random())
+    // backgroundCtx.clearRect(0, 0, width, height)
+    // backgroundCtx.rotate(rotateAngle)
     backgroundCtx.fillText(this.gameRateText, width * Math.random(), height * Math.random())
   }
 
@@ -333,7 +340,7 @@ export default class extends Phaser.State {
       this.countDown = (this.countDown - 0.1).toFixed(1)
       // this.scoreText.text = 'Remain: ' + this.countDown + 's'
 
-      this.updateBackgroundLayer1()
+      this.createBackground1()
 
       // Keep counting down
       this.countSecTimout = setTimeout(this.countSec.bind(this), 100)
@@ -636,15 +643,15 @@ export default class extends Phaser.State {
 
     // Get the kill rate
     let gameRate = _.find(KILL_RATES_MAP, (rate) => {
-      let min = rate.min || -Infinity
-      let max = rate.max || Infinity
+      let min = _.isNumber(rate.min) ? rate.min : -Infinity
+      let max = _.isNumber(rate.max) ? rate.max : Infinity
       return that.gameLevel >= min && that.gameLevel <= max
     })
 
     this.gameRateText = gameRate.name
 
-    this.updateBackgroundLayer2()
-    this.updateBackgroundLayer3()
+    this.createBackground2()
+    this.createBackground3()
     this.addBaddie()
 
     // Start measure session
@@ -680,6 +687,7 @@ export default class extends Phaser.State {
     // Capture the backgrounds
     this.captureDataURLs[1] = this.backgroundLayer1.toDataURL()
     this.captureDataURLs[2] = this.backgroundLayer2.toDataURL()
+    this.captureDataURLs[3] = this.backgroundLayer3.toDataURL()
 
     // this.state.start('Game Over', true, false, {
     //   killBossCount: this.gameLevel - 1,
@@ -755,15 +763,12 @@ export default class extends Phaser.State {
       style.height = height + 'px'
       
       // Show text
-      let gameOverTitle = document.createElement('h1')
-      gameOverTitle.innerText = 'GAME OVER'
-      this.frontgroundContainer1.appendChild(gameOverTitle)
+      this.gameOverTitle = document.createElement('h1')
+      this.frontgroundContainer1.appendChild(this.gameOverTitle)
 
       // Show rank
-      let gameOverRank = document.createElement('span')
-      gameOverRank.id = 'gameOverRank'
-      gameOverRank.innerText = 'Loading rank...'
-      this.frontgroundContainer1.appendChild(gameOverRank)
+      this.gameOverRank = document.createElement('span')
+      this.frontgroundContainer1.appendChild(this.gameOverRank)
 
       // Interactives
       let interactiveContainer = document.createElement('div')
@@ -788,6 +793,8 @@ export default class extends Phaser.State {
         that.shareGame()
       })
 
+      // Add front ground to document
+      document.getElementById('frontground1').appendChild(this.frontgroundContainer1)
     }
 
     this.updateFrontground1()
@@ -795,7 +802,9 @@ export default class extends Phaser.State {
 
   updateFrontground1 () {
     let that = this
-    let gameOverRank = this.frontgroundContainer1.querySelector('#gameOverRank')
+
+    this.gameOverTitle.innerText = this.gameRateText
+    this.gameOverRank.innerText = 'Loading rank...'
 
     // When total play count and game rank are resolved
     // we will show the detail information
@@ -825,7 +834,7 @@ export default class extends Phaser.State {
       }
       gameRank = gameCountAtCurrentLevel + 1
 
-      that.gameOverRankText = 'You rank ' 
+      that.gameOverRank.innerText = 'You rank ' 
         + gameRank 
         + ' from '
         + totalPlayCount
@@ -833,14 +842,14 @@ export default class extends Phaser.State {
         + (100 * gameRank / totalPlayCount).toFixed(2) 
         + '%) '
 
-      gameOverRank.innerText = that.gameOverRankText
-
     })
+
+    this.frontgroundContainer1.style.visibility = 'visible'
     
-    let frontGround1Wrapper = document.getElementById('frontground1')
-    if (frontGround1Wrapper.childNodes.length === 0) {
-      frontGround1Wrapper.appendChild(this.frontgroundContainer1)
-    }
+    // let frontGround1Wrapper = document.getElementById('frontground1')
+    // if (frontGround1Wrapper.childNodes.length === 0) {
+    //   frontGround1Wrapper.appendChild(this.frontgroundContainer1)
+    // }
   }
 
   createShareFontDataUrl () {
@@ -861,15 +870,15 @@ export default class extends Phaser.State {
     imageCanvasBufferCtx.textBaseline = 'middle'
     imageCanvasBufferCtx.fillText(this.gameRateText, width / 2, height / 2)
 
-    this.captureDataURLs[3] = imageCanvasBuffer.toDataURL()
+    this.captureDataURLs[4] = imageCanvasBuffer.toDataURL()
     imageCanvasBufferCtx.clearRect(0, 0, width, height)
 
     // Creat game result text
     let fontSize = Math.floor(Math.min(width, height) / 20)
     imageCanvasBufferCtx.font = fontSize + 'px Bangers'
-    imageCanvasBufferCtx.fillText(this.gameOverRankText, width / 2, height / 2  + fontSize * 1.5)
+    imageCanvasBufferCtx.fillText(this.gameOverRank.innerText, width / 2, height / 2  + fontSize * 1.5)
 
-    this.captureDataURLs[4] = imageCanvasBuffer.toDataURL()
+    this.captureDataURLs[5] = imageCanvasBuffer.toDataURL()
     imageCanvasBufferCtx.clearRect(0, 0, width, height)
 
     // Share game url
@@ -877,7 +886,7 @@ export default class extends Phaser.State {
     imageCanvasBufferCtx.textBaseline = 'bottom'
     imageCanvasBufferCtx.fillText('Play at dotninja.herokuapp.com', width / 2, height - fontSize)
 
-    this.captureDataURLs[5] = imageCanvasBuffer.toDataURL()
+    this.captureDataURLs[6] = imageCanvasBuffer.toDataURL()
     imageCanvasBufferCtx.clearRect(0, 0, width, height)
 
   }
@@ -888,8 +897,11 @@ export default class extends Phaser.State {
   }
 
   resetGame () {
+    let width = this.game.world.width
+    let height = this.game.world.height
     this.captureDataURLs = []
-    this.frontgroundContainer1.parentNode.removeChild(this.frontgroundContainer1)
+    this.backgroundLayer3.getContext('2d').clearRect(0, 0, width, height)
+    this.frontgroundContainer1.style.visibility = 'hidden'
   }
 
   shareGame () {
