@@ -7,6 +7,19 @@ import Boss from '../sprites/Boss'
 
 import api from '../services/api'
 
+const KILL_RATES = [
+  'First Blood',
+  'Double Kills',
+  'Triple Kills',
+  'Mega Kill',
+  'Unstoppedable',
+  'Ultra kill',
+  'Dominating',
+  'Monster Kill',
+  'God Like',
+  'Rampage'
+]
+
 export default class extends Phaser.State {
 
   constructor () {
@@ -122,7 +135,7 @@ export default class extends Phaser.State {
     // this.capturer.start()
     
     // Capture
-    this.captureDataURLs.push(this.mainCanvas.toDataURL('image/png'))
+    this.captureDataURLs.push(this.mainCanvas.toDataURL())
   }
 
   update () {
@@ -448,7 +461,7 @@ export default class extends Phaser.State {
   killBoss (ninja, boss) {
     let that = this
     // Capture the moment!
-    this.captureDataURLs[0] = this.mainCanvas.toDataURL('image/png')
+    this.captureDataURLs[0] = this.mainCanvas.toDataURL()
 
     // this.stopCount()
     // this.recordHighscore()
@@ -587,8 +600,8 @@ export default class extends Phaser.State {
     // this.capturer.save()
 
     // Capture the backgrounds
-    this.captureDataURLs[1] = this.backgroundLayer1.toDataURL('image/png')
-    this.captureDataURLs[2] = this.backgroundLayer2.toDataURL('image/png')
+    this.captureDataURLs[1] = this.backgroundLayer1.toDataURL()
+    this.captureDataURLs[2] = this.backgroundLayer2.toDataURL()
 
     // this.state.start('Game Over', true, false, {
     //   killBossCount: this.gameLevel - 1,
@@ -598,7 +611,7 @@ export default class extends Phaser.State {
 
     // TODOs
     // Create images to share
-    console.log(this.createCapturePng())
+    // console.log(this.createCapturePng())
     // Create game over text
     // this.gameRankPromise = new Promise((resolve, reject) => {
     //   // Load server game rank
@@ -611,6 +624,7 @@ export default class extends Phaser.State {
     //   that.gameRank = val
     // })
 
+    // Create game over text
     this.createFrontground1()
 
     // Listen on restart trigger
@@ -619,11 +633,6 @@ export default class extends Phaser.State {
 
     // Save game log
     this.saveGameLog()
-
-  }
-
-  createShareTextLayer () {
-
   }
 
   createCapturePng () {
@@ -650,7 +659,7 @@ export default class extends Phaser.State {
     // document.getElementById('frontground1').appendChild(imageCanvasBuffer)
 
     // TODO: check if detached imageCanvasBuffer is memory leak
-    return imageCanvasBuffer.toDataURL('image/png')
+    return imageCanvasBuffer.toDataURL()
   }
 
   // Front ground for game over text
@@ -728,18 +737,61 @@ export default class extends Phaser.State {
 
       gameRank = gameCountAtCurrentLevel + 1
 
-      gameOverRank.innerText = 'You rank ' 
+      that.gameOverRankText = 'You rank ' 
         + gameRank 
-        + ' (top ' 
-        + (gameRank / totalPlayCount).toFixed(4) * 100
-        + '%) from all players!'
-          
+        + ' from '
+        + totalPlayCount
+        + ' plays! (top ' 
+        + (100 * gameRank / totalPlayCount).toFixed(2) 
+        + '%) '
+
+      gameOverRank.innerText = that.gameOverRankText
+
     })
     
     let frontGround1Wrapper = document.getElementById('frontground1')
     if (frontGround1Wrapper.childNodes.length === 0) {
       frontGround1Wrapper.appendChild(this.frontgroundContainer1)
     }
+  }
+
+  createShareFontDataUrl () {
+    let that = this,
+        width = this.game.world.width,
+        height = this.game.world.height,
+        imageCanvasBuffer = document.createElement('canvas')
+
+    imageCanvasBuffer.width = width
+    imageCanvasBuffer.height = height
+
+    let imageCanvasBufferCtx = imageCanvasBuffer.getContext('2d')
+
+    // Create game rating text
+    imageCanvasBufferCtx.fillStyle = 'rgba(200, 200, 200, 0.8)'
+    imageCanvasBufferCtx.font = Math.floor(Math.min(width, height) / 10) + 'px Bangers'
+    imageCanvasBufferCtx.textAlign = 'center'
+    imageCanvasBufferCtx.textBaseline = 'middle'
+    imageCanvasBufferCtx.fillText(this.gameRateText, width / 2, height / 2)
+
+    this.captureDataURLs[3] = imageCanvasBuffer.toDataURL()
+    imageCanvasBufferCtx.clearRect(0, 0, width, height)
+
+    // Creat game result text
+    let fontSize = Math.floor(Math.min(width, height) / 20)
+    imageCanvasBufferCtx.font = fontSize + 'px Bangers'
+    imageCanvasBufferCtx.fillText(this.gameOverRankText, width / 2, height / 2  + fontSize * 1.5)
+
+    this.captureDataURLs[4] = imageCanvasBuffer.toDataURL()
+    imageCanvasBufferCtx.clearRect(0, 0, width, height)
+
+    // Share game url
+    imageCanvasBufferCtx.font = fontSize + 'px sans-serif'
+    imageCanvasBufferCtx.textBaseline = 'bottom'
+    imageCanvasBufferCtx.fillText('Play at dotninja.herokuapp.com', width / 2, height - fontSize)
+
+    this.captureDataURLs[5] = imageCanvasBuffer.toDataURL()
+    imageCanvasBufferCtx.clearRect(0, 0, width, height)
+
   }
 
   gameRestart () {
@@ -753,9 +805,15 @@ export default class extends Phaser.State {
   }
 
   shareGame () {
+    let that = this
     // TODO: how to share game in wechat?
-    let dataURL = this.createCapturePng()
-    window.open(dataURL)
+    // Need to wait for ranking information arrives
+    this.playStatByLevelPromise
+    .then(() => {
+      // Create share text
+      that.createShareFontDataUrl()
+      window.open(that.createCapturePng())
+    })
   }
 
 }
