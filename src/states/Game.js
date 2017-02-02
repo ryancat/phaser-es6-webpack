@@ -85,21 +85,24 @@ export default class extends Phaser.State {
     }
 
     if (window.DeviceOrientationEvent) {
-      setTimeout(() => {
-        window.addEventListener('deviceorientation', (eventData) => {
-          if (that.orientation.startBeta === null) {
-            that.orientation.startBeta = eventData.beta
-          }
+      window.addEventListener('deviceorientation', (eventData) => {
+        if (that.orientation.startBeta === null) {
+          that.orientation.startBeta = eventData.beta
+        }
 
-          if (that.orientation.startGamma === null) {
-            that.orientation.startGamma = eventData.gamma
-          }
+        if (that.orientation.startGamma === null) {
+          that.orientation.startGamma = eventData.gamma
+        }
 
-          that.orientation.beta = eventData.beta
-          that.orientation.gamma = eventData.gamma
-          that.devText = eventData.beta + ', ' + eventData.gamma
-        }, true);
-      }, 1000)
+        that.orientation.beta = eventData.beta
+        that.orientation.gamma = eventData.gamma
+
+        that.devText = that.orientation.startGamma
+          + ', ' 
+          + (that.orientation.startGamma + 180)
+          + ', '
+          + (that.orientation.startGamma - 180)
+      }, true);
     }
 
     // Config (immutable)
@@ -109,9 +112,9 @@ export default class extends Phaser.State {
       numOfBaddies: 20,
       allowNinjaPassBorder: false,
       ninjaLives: 3,
-      countDown: 10,
+      countDown: 100,
       playerSignLimit: DEFAULT_PLAYER_SIGN_LIMIT,
-      // dev: true
+      dev: true
     }
 
     // Game inner states

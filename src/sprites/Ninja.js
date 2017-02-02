@@ -77,10 +77,10 @@ export default class extends Phaser.Sprite {
       betaMultiplier = dBeta + 360
     }
 
-    // this.game.devText += ', ' + gammaMax + ', ' + gammaMin
+    this.game.devText += ', ' + gamma + ', ' + gammaMultiplier
 
     this.ninjaMoveMap.horizontal(gammaMultiplier)
-    this.ninjaMoveMap.vertical(betaMultiplier)
+    // this.ninjaMoveMap.vertical(betaMultiplier)
 
     // Basic move for desktop
     if (this.cursor.left.isDown) {
