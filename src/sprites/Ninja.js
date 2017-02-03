@@ -54,8 +54,8 @@ export default class extends Phaser.Sprite {
     let gamma0 = this.orientation.startGamma,
         gamma = this.orientation.gamma,
         dGamma = gamma - gamma0,
-        gammaMax = gamma0 + 180,
-        gammaMin = gamma0 - 180,
+        gammaMax = gamma0 + 90,
+        gammaMin = gamma0 - 90,
         beta0 = this.orientation.startBeta,
         beta = this.orientation.beta,
         dBeta = beta - beta0,
@@ -65,10 +65,12 @@ export default class extends Phaser.Sprite {
         betaMultiplier = dBeta
 
     // Basic move for mobile
+    // Fix issue when gamma is jumping when beta
+    // is close to 90 degree
     if (dGamma > gammaMax) {
-      gammaMultiplier = dGamma - 360
+      gammaMultiplier = dGamma - 180
     } else if (dGamma < gammaMin) {
-      gammaMultiplier = dGamma + 360
+      gammaMultiplier = dGamma + 180
     }
 
     if (dBeta > betaMax) {
@@ -77,10 +79,10 @@ export default class extends Phaser.Sprite {
       betaMultiplier = dBeta + 360
     }
 
-    this.game.devText += ', ' + gamma + ', ' + gammaMultiplier
+    // this.game.devText += ', ' + gamma + ', ' + gammaMultiplier
 
     this.ninjaMoveMap.horizontal(gammaMultiplier)
-    // this.ninjaMoveMap.vertical(betaMultiplier)
+    this.ninjaMoveMap.vertical(betaMultiplier)
 
     // Basic move for desktop
     if (this.cursor.left.isDown) {

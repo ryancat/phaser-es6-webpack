@@ -119,7 +119,7 @@ export default class extends Phaser.State {
 
     // Game inner states
     this.mainCanvas = document.getElementById('content').getElementsByTagName('canvas')[0]
-    this.spriteScale = this.game.world.width / 600
+    this.spriteScale = 0.8
     this.baddieStates = []
     this.gameLevel = 0
     this.gameRateText = KILL_RATES_MAP[0].name
@@ -539,7 +539,8 @@ export default class extends Phaser.State {
       game: this,
       x: this.world.centerX,
       y: this.world.centerY,
-      asset: 'ninja',
+      // asset: 'ninja',
+      asset: 'roundIcon01',
       options
     })
 
@@ -1053,6 +1054,13 @@ export default class extends Phaser.State {
 // x5. Share
 // x6. Mobile support
 // 7. Adaptive second count (using average time)
-// 8. Show live rank
-// 9. User signature
+// x8. Show live rank
+// x9. User signature
 // 10. User top ranking list
+// 11. Add more immediate feedback when kill boss
+// 12. Add simple super power
+// 13. Add more stat for user for a series of play
+// 14. Add top rank name list
+// 15. multi player?
+// 16. Fix angle issue for accelerator meter
+// 17. Add icon character
