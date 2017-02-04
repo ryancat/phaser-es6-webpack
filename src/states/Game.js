@@ -150,8 +150,6 @@ export default class extends Phaser.State {
       this.createBackground4()
     }
 
-    // this.createCountDownText()
-    // this.createHighScoreText()
     this.countSec()
 
     // Add Ninja
@@ -166,25 +164,6 @@ export default class extends Phaser.State {
     // Add boss
     this.createBoss()
 
-    // Start recording gif
-    // this.gifRecord = new GIF({
-    //   workers: 10,
-    //   quality: 10
-    // })
-
-    // let mainCanvas = document.getElementById('content').getElementsByTagName('canvas')[0]
-    // this.gifRecord.addFrame(mainCanvas)
-    // this.gifRecord.on('finished', (blob) => {
-    // });
-
-    // this.gifRecord.render()
-
-    // this.capturer = new CCapture({ 
-    //   format: 'jpg',
-    //   quanlity: 10
-    // })
-
-    // this.capturer.start()
   }
 
   update () {
@@ -195,15 +174,6 @@ export default class extends Phaser.State {
   render () { 
     // this.capturer.capture(this.mainCanvas)
   }
-
-  // fetchTotalPlayCount () {
-  //   let that = this
-  //   this.totalPlayCountPromise = api.getPlayCountStat()
-  //   .then((response) => {
-  //     console.log('total play count', response.body.totalCount)
-  //     that.totalPlayCount = response.body.totalCount
-  //   })
-  // }
 
   fetchPlayStat () {
     let that = this
@@ -368,8 +338,6 @@ export default class extends Phaser.State {
         fontSize = Math.floor(Math.min(width, height) / 8),
         rotateAngle = Math.PI * 2 * Math.random()
 
-    // backgroundCtx.clearRect(0, 0, width, height)
-    // backgroundCtx.rotate(rotateAngle)
     backgroundCtx.fillText(this.gameRateText, width * Math.random(), height * Math.random())
   }
 
@@ -388,11 +356,6 @@ export default class extends Phaser.State {
       document.getElementById('background4').appendChild(this.backgroundLayer4)
     }
   }
-
-  // createCountDownText () {
-  //   this.countDown = this.gameConfig.countDown || 10
-  //   // this.scoreText = this.game.add.text(16, this.game.world.height - 40, 'Remain: ' + this.countDown + 's', { fontSize: '32px', fill: '#FFF' })
-  // }
 
   countSec () {
     if (this.countDown <= 0) {
@@ -418,28 +381,6 @@ export default class extends Phaser.State {
     this.countDown = (+this.countDown) + (+secondToAdd)
     this.longestTimeCount = Math.max(this.longestTimeCount, this.countDown)
   }
-
-  // createHighScoreText () {
-  //   this.highScores = [0]
-  //   this.highScoreText = this.game.add.text(this.game.world.width - 50, this.game.world.height - 120, this.getHighScoreText(), { fontSize: '16px', fill: '#FFF' })
-  // }
-
-  // recordHighscore () {
-  //   this.highScores.push(this.countDown)
-  //   this.highScores = this.highScores.sort().reverse()
-  //   if (this.highScores.length > 3) {
-  //     this.highScores.pop()
-  //   }
-  //   this.highScoreText.text = this.getHighScoreText()
-  // }
-
-  // getHighScoreText () {
-  //   let sortedHighScores = this.highScores.map((score) => {
-  //     return score + 's'
-  //   }).join('\n')
-
-  //   return this.countDown + 's\n\n' + sortedHighScores
-  // }
 
   createBaddies () {
     // Kill all existing baddies
@@ -550,12 +491,6 @@ export default class extends Phaser.State {
     this.game.add.existing(this.ninja)
 
     this.startMeasureSession()
-
-    // if (this.gameConfig.sameBaddies === true) {
-    //   this.createBaddies(this.baddieStates)
-    // } else {
-    //   this.createBaddies()
-    // }
   }
 
   collideNinjaBaddies (ninja, baddie) {
@@ -572,30 +507,10 @@ export default class extends Phaser.State {
     // Capture
     this.captureDataURLs[0] = this.mainCanvas.toDataURL()
 
-    // this.stopCount()
-    // this.recordHighscore()
     ninja.kill()
-    // this.ninjaRespawn(countDown)
-
-    // setTimeout(function () {
-    //   that.createNinja()
-    //   that.secCount = 0
-    //   that.countSec()
-    // }, 1000 * countDown)
 
     // When ninja is killed, game over
     this.gameOver()
-
-    // Ninja respawn soon
-    // setTimeout(function () {
-    //   that.createNinja()
-    // }, 300)
-
-    // // Record the current session
-    // this.record()
-
-    // // When ninja get killed, we are going to the prev level
-    // this.prevLevel()
 
   }
 
@@ -604,21 +519,7 @@ export default class extends Phaser.State {
     // Capture the moment!
     this.captureDataURLs[0] = this.mainCanvas.toDataURL()
 
-    // this.stopCount()
-    // this.recordHighscore()
     boss.kill()
-    // this.ninjaRespawn(countDown)
-
-    // setTimeout(function () {
-    //   that.createNinja()
-    //   that.secCount = 0
-    //   that.countSec()
-    // }, 1000 * countDown)
-
-    // this.state.start('Game Intro', true, false, {
-    //   gameStage: this.gameStage
-    // })
-    // 
     
     // Stop current measure session
     this.endMeasureSession()
@@ -633,17 +534,6 @@ export default class extends Phaser.State {
     this.createBoss()
 
   }
-
-  // ninjaRespawn (countDown) {
-  //   const countdownfn = () => {
-  //     if (countDown >= 0) {
-  //       this.scoreText.text = 'Respawn: ' + countDown-- + 's' 
-  //       setTimeout(countdownfn, 1000)
-  //     }
-  //   }
-
-  //   countdownfn()
-  // }
 
   // Measure stat logics
   initMeasure () {
@@ -676,29 +566,6 @@ export default class extends Phaser.State {
     this.currentMeasureSession = null
   }
 
-  // addMeasure (key) {
-
-  //   switch(key) {
-  //     case 'boss dead':
-  //       this.currentMeasureSession.bossDeadTime.push(Date.now())
-
-  //     default:
-  //       this.currentMeasureSession.snapshots.push(this.baddieStates)
-  //   }
-  // }
-
-  // record (key) {
-  //   if (!this.currentMeasureSession) {
-  //     return
-  //   }
-
-  //   // this.currentMeasureSession.name = key
-
-  //   // After recording, end the current measure session
-  //   this.endMeasureSession()
-    
-  // }
-
   printMeasure () {
     console.log('all:', this.measureStat)
   }
@@ -724,15 +591,7 @@ export default class extends Phaser.State {
 
     // Start measure session
     this.startMeasureSession()
-
-    // this.capturer.capture(this.mainCanvas)
   }
-
-  // prevLevel (prevStep = 1) {
-  //   this.gameLevel -= prevStep
-  //   this.numOfBaddies = this.gameLevel
-  //   this.removeBaddie()
-  // }
 
   ////// GAME OVER
   gameOver () {
@@ -752,34 +611,10 @@ export default class extends Phaser.State {
     // Update the kill boss count background
     this.createBackground2()
 
-    // this.capturer.stop()
-    // this.capturer.save()
-
     // Capture the backgrounds
     this.captureDataURLs[1] = this.backgroundLayer1.toDataURL()
     this.captureDataURLs[2] = this.backgroundLayer2.toDataURL()
     this.captureDataURLs[3] = this.backgroundLayer3.toDataURL()
-
-    // this.state.start('Game Over', true, false, {
-    //   killBossCount: this.gameLevel - 1,
-    //   longestTimeCount: this.longestTimeCount,
-    //   captureDataURLs: this.captureDataURLs
-    // })
-
-    // TODOs
-    // Create images to share
-    // console.log(this.createCapturePng())
-    // Create game over text
-    // this.gameRankPromise = new Promise((resolve, reject) => {
-    //   // Load server game rank
-    //   setTimeout(() => {
-    //     resolve(51)
-    //   }, 2000)
-    // })
-    // .then((val) => {
-    //   console.log('game rank', val)
-    //   that.gameRank = val
-    // })
 
     // Create game over text
     this.createFrontground1()
@@ -807,13 +642,6 @@ export default class extends Phaser.State {
       img.src = dataURL
       imageCanvasBufferCtx.drawImage(img, 0, 0)
     })
-
-    // let img = new Image()
-    // img.src = imageCanvasBuffer.toDataURL()
-    // imageCanvasBufferCtx.drawImage(img, 0, 0)
-
-    // Test: put the imageCanvasBuffer onto screen
-    // document.getElementById('frontground1').appendChild(imageCanvasBuffer)
 
     // TODO: check if detached imageCanvasBuffer is memory leak
     return imageCanvasBuffer.toDataURL()
@@ -906,21 +734,9 @@ export default class extends Phaser.State {
           existingPlayStat,
           currentLevelStat
 
-      // Get existing play stat
-      // if (existingPlayStat = _.find(that.playStatByLevel, { _id: 0 })) {
-      //   existingPlayCount = existingPlayStat.playCount
-      // } else {
-      //   existingPlayCount = 0
-      // }
       existingPlayCount = that.getPlayCountByLevel(that.playStatByLevel)
       totalPlayCount = existingPlayCount + 1
 
-      // Get current level stat
-      // if (currentLevelStat = _.find(that.playStatByLevel, { _id: that.gameLevel })) {
-      //   gameCountAtCurrentLevel = currentLevelStat.playCount
-      // } else {
-      //   gameCountAtCurrentLevel = 0
-      // }
       gameCountAtCurrentLevel = that.getPlayCountByLevel(that.playStatByLevel, that.gameLevel)
       gameRank = gameCountAtCurrentLevel + 1
 
@@ -935,11 +751,6 @@ export default class extends Phaser.State {
     })
 
     this.frontgroundContainer1.style.visibility = 'visible'
-    
-    // let frontGround1Wrapper = document.getElementById('frontground1')
-    // if (frontGround1Wrapper.childNodes.length === 0) {
-    //   frontGround1Wrapper.appendChild(this.frontgroundContainer1)
-    // }
   }
 
   getPlayCountByLevel (playStatByLevel = [], level = 0) {
@@ -1039,9 +850,6 @@ export default class extends Phaser.State {
       })
 
       document.getElementById('frontground2').appendChild(shareContainer)
-
-      // This will crash wechat browser
-      // window.open(that.createCapturePng())
     })
   }
 
