@@ -114,7 +114,7 @@ export default class extends Phaser.State {
       ninjaLives: 3,
       countDown: 100,
       playerSignLimit: DEFAULT_PLAYER_SIGN_LIMIT,
-      dev: true
+      // dev: true
     }
 
     // Game inner states
@@ -336,7 +336,7 @@ export default class extends Phaser.State {
     })
   }
 
-  // Background for kill boss counters
+  // Background for game rate text
   createBackground3 () {
     // Add background if not exist
     if (!this.backgroundLayer3) {
@@ -373,6 +373,7 @@ export default class extends Phaser.State {
     backgroundCtx.fillText(this.gameRateText, width * Math.random(), height * Math.random())
   }
 
+  // Dev background 4
   createBackground4 () {
     this.backgroundLayer4 = this.backgroundLayer4 || document.createElement('div')
     let width = this.game.world.width
