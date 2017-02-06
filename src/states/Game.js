@@ -127,7 +127,11 @@ export default class extends Phaser.State {
     this.gameRateText = KILL_RATES_MAP[0].name
     this.numOfBaddies = this.gameLevel
     this.longestTimeCount = this.gameConfig.countDown
-    this.captureDataURLs = []
+    this.capturedDataURLs = {
+      background: [],
+      main: [],
+      frontground: []
+    }
     this.countDown = this.gameConfig.countDown || 10
 
     // Get state from server
@@ -186,10 +190,22 @@ export default class extends Phaser.State {
         width = this.game.world.width,
         height = this.game.world.height
 
+    // Background layer 0: The background for everything
+    this.backgroundLayer0 = this.backgroundLayer0 || new GameLayer({
+      container: document.getElementById('background0'),
+      context: this,
+      classname: 'background',
+      style: {
+        // backgroundColor: 'black',
+        fillStyle: '#000000'
+      }
+    })
+
     // Background layer 1: timeout counter
     this.backgroundLayer1 = this.backgroundLayer1 || new GameLayer({
       container: document.getElementById('background1'),
       context: this,
+      classname: 'background',
       update: this.updateBackground1
     })
     this.backgroundLayer1.update()
@@ -199,7 +215,7 @@ export default class extends Phaser.State {
       container: document.getElementById('background2'),
       context: this,
       update: this.updateBackground2,
-      classname: 'centerText',
+      classname: 'background',
       style: {
         fillStyle: 'rgba(124, 93, 96, 0.3)',
         font: Math.min(width, height) + 'px Bangers',
@@ -214,7 +230,7 @@ export default class extends Phaser.State {
       container: document.getElementById('background3'),
       context: this,
       update: this.updateBackground3,
-      classname: 'centerText',
+      classname: 'background',
       style: {
         fillStyle: 'rgba(124, 93, 96, 0.3)',
         font: Math.floor(Math.min(width, height) / 8) + 'px Bangers',
@@ -269,7 +285,7 @@ export default class extends Phaser.State {
       type: 'div',
       layerId: 'frontground1Container',
       update: this.updateFrontground1,
-      classname: 'centerText',
+      classname: 'centerText frontground',
       isHidden: true,
       contents: [
         gameOverTitleElement,
@@ -303,7 +319,7 @@ export default class extends Phaser.State {
     this.frontgroundLayer2 = this.frontgroundLayer2 || new GameLayer({
       container: document.getElementById('frontground2'),
       type: 'div',
-      classname: 'centerText',
+      classname: 'centerText frontground',
       context: this,
       isHidden: true,
       style: {
@@ -634,7 +650,8 @@ export default class extends Phaser.State {
   killBoss (ninja, boss) {
     let that = this
     // Capture the moment!
-    this.captureDataURLs[0] = this.mainCanvas.toDataURL()
+    // this.captureDataURL(this.mainCanvas)
+    // this.capturedDataURLs[0] = this.mainCanvas.toDataURL()
 
     boss.kill()
     
@@ -660,8 +677,8 @@ export default class extends Phaser.State {
       game: this,
       x: this.world.centerX,
       y: this.world.centerY,
-      // asset: 'ninja',
-      asset: 'roundIcon01',
+      asset: 'ninja',
+      // asset: 'roundIcon01',
       options
     })
 
@@ -676,7 +693,8 @@ export default class extends Phaser.State {
     let that = this
     
     // Capture
-    this.captureDataURLs[0] = this.mainCanvas.toDataURL()
+    this.captureDataURL(this.mainCanvas)
+    // this.capturedDataURLs[0] = this.mainCanvas.toDataURL()
 
     ninja.kill()
 
@@ -777,9 +795,13 @@ export default class extends Phaser.State {
     this.backgroundLayer2.update()
 
     // Capture the backgrounds
-    this.captureDataURLs[1] = this.backgroundLayer1.element.toDataURL()
-    this.captureDataURLs[2] = this.backgroundLayer2.element.toDataURL()
-    this.captureDataURLs[3] = this.backgroundLayer3.element.toDataURL()
+    this.captureDataURL(this.backgroundLayer0.element)
+    this.captureDataURL(this.backgroundLayer1.element)
+    this.captureDataURL(this.backgroundLayer2.element)
+    this.captureDataURL(this.backgroundLayer3.element)
+    // this.capturedDataURLs[1] = this.backgroundLayer1.element.toDataURL()
+    // this.capturedDataURLs[2] = this.backgroundLayer2.element.toDataURL()
+    // this.capturedDataURLs[3] = this.backgroundLayer3.element.toDataURL()
 
     // Create game over text
     this.frontgroundLayer1.update()
@@ -798,15 +820,19 @@ export default class extends Phaser.State {
   /////////////////
   createCapturePng () {
     let that = this,
-        imageCanvasBuffer = document.createElement('canvas')
+        imageCanvasBuffer = document.createElement('canvas'),
+        imageCanvasBufferCtx = imageCanvasBuffer.getContext('2d'),
+        capturedDataURLsArr = [].concat(
+          this.capturedDataURLs.background,
+          this.capturedDataURLs.main,
+          this.capturedDataURLs.frontground
+        )
 
     imageCanvasBuffer.width = this.game.world.width
     imageCanvasBuffer.height = this.game.world.height
 
-    let imageCanvasBufferCtx = imageCanvasBuffer.getContext('2d')
-
     // Mix all captured data urls 
-    this.captureDataURLs.forEach((dataURL) => {
+    _.flatten(capturedDataURLsArr).forEach((dataURL) => {
       let img = new Image()
       img.src = dataURL
       imageCanvasBufferCtx.drawImage(img, 0, 0)
@@ -814,6 +840,55 @@ export default class extends Phaser.State {
 
     // TODO: check if detached imageCanvasBuffer is memory leak
     return imageCanvasBuffer.toDataURL()
+  }
+
+  captureDataURL (canvasElement, position) {
+    let that = this,
+        canvasElements = {
+          background: document.querySelectorAll('canvas.background'),
+          main: document.querySelectorAll('#content canvas'),
+          frontground: document.querySelectorAll('canvas.frontground')
+        }
+
+    function insertTo (pos) {
+      let canvasElementSet = canvasElements[pos],
+          stage = that.capturedDataURLs[pos],
+          canvasIndex = _.findIndex(canvasElementSet, canvasElement)
+
+      // If we cannot find the correct location of capatured image
+      // We will now put it in the largest possible index
+      if (canvasIndex === -1) {
+        canvasIndex = canvasElementSet.length
+      }
+
+      if (!stage[canvasIndex]) {
+        stage[canvasIndex] = []
+      }
+
+      stage[canvasIndex].push(canvasElement.toDataURL())
+      return true
+    }
+
+    if (position) {
+      insertTo(position)
+    } else {
+      insertTo('background')
+      insertTo('main')
+      insertTo('frontground')
+    }
+
+    // if (canvasIndex >= 0) {
+    //   // When we found the canvas in current document
+    //   if (this.capturedDataURLs[canvasIndex]) {
+    //     this.capturedDataURLs[canvasIndex].push(canvasElement.toDataURL())
+    //   } else {
+    //     this.capturedDataURLs[canvasIndex] = [canvasElement.toDataURL()]
+    //   }
+    // } else {
+    //   // When the given canvas element is not in document
+    //   // We will append the 
+
+    // }
   }
 
   getPlayCountByLevel (playStatByLevel = [], level = 0) {
@@ -849,7 +924,8 @@ export default class extends Phaser.State {
     let gameRate = this.playerSignText ? this.playerSignText + ' got ' + this.gameRateText : this.gameRateText
     imageCanvasBufferCtx.fillText(gameRate, width / 2, height / 2)
 
-    this.captureDataURLs[4] = imageCanvasBuffer.toDataURL()
+    this.captureDataURL(imageCanvasBuffer, 'frontground')
+    // this.capturedDataURLs[4] = imageCanvasBuffer.toDataURL()
     imageCanvasBufferCtx.clearRect(0, 0, width, height)
 
     // Creat game result text
@@ -857,7 +933,8 @@ export default class extends Phaser.State {
     imageCanvasBufferCtx.font = fontSize + 'px Bangers'
     imageCanvasBufferCtx.fillText(gameRankElement.innerText, width / 2, height / 2 + fontSize * 1.5)
 
-    this.captureDataURLs[5] = imageCanvasBuffer.toDataURL()
+    this.captureDataURL(imageCanvasBuffer, 'frontground')
+    // this.capturedDataURLs[5] = imageCanvasBuffer.toDataURL()
     imageCanvasBufferCtx.clearRect(0, 0, width, height)
 
     // Share game url
@@ -865,7 +942,8 @@ export default class extends Phaser.State {
     imageCanvasBufferCtx.textBaseline = 'bottom'
     imageCanvasBufferCtx.fillText('Play at dotninja.herokuapp.com', width / 2, height - fontSize)
 
-    this.captureDataURLs[6] = imageCanvasBuffer.toDataURL()
+    this.captureDataURL(imageCanvasBuffer, 'frontground')
+    // this.capturedDataURLs[6] = imageCanvasBuffer.toDataURL()
     imageCanvasBufferCtx.clearRect(0, 0, width, height)
 
   }
@@ -878,7 +956,11 @@ export default class extends Phaser.State {
   resetGame () {
     let width = this.game.world.width
     let height = this.game.world.height
-    this.captureDataURLs = []
+    this.capturedDataURLs = {
+      background: [],
+      main: [],
+      frontground: []
+    }
     this.backgroundLayer3.context.clearRect(0, 0, width, height)
     this.frontgroundLayer1.hide()
   }
@@ -914,3 +996,5 @@ export default class extends Phaser.State {
 // 15. multi player?
 // 16. Fix angle issue for accelerator meter
 // 17. Add icon character
+// 18. Use the shield super power
+// 19. Use the wing man super power

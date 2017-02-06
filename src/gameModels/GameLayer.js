@@ -29,7 +29,9 @@ export default class GameLayer {
         updateLayerFn = _.isFunction(prop.update) ? prop.update.bind(prop.context) : _.noop
 
     if (prop.classname) {
-      layer.classList.add(prop.classname)
+      prop.classname.split(' ').forEach((classname) => { 
+        layer.classList.add(classname) 
+      })
     }
 
     if (prop.layerId) {
