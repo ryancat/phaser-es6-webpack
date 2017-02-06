@@ -6,6 +6,7 @@ import Baddie from '../sprites/Baddie'
 import Boss from '../sprites/Boss'
 
 import api from '../services/api'
+import GameLayer from '../gameModels/GameLayer'
 
 const KILL_RATES_MAP = [{
     name: 'Newbie!',
@@ -60,6 +61,7 @@ export default class extends Phaser.State {
 
   constructor () {
     super()
+
     // DEV only
     window.printM = this.printMeasure
   }
@@ -141,9 +143,10 @@ export default class extends Phaser.State {
   preload () {}
 
   create () {
-    this.createBackground1()
-    this.createBackground2()
-    this.createBackground3()
+    let that = this
+
+    // Create all layers for game
+    this.createLayers()
 
     // When in dev mode, output some more information
     if (this.gameConfig.dev) {
@@ -175,103 +178,143 @@ export default class extends Phaser.State {
     // this.capturer.capture(this.mainCanvas)
   }
 
-  fetchPlayStat () {
-    let that = this
-    this.playStatByLevelPromise = api.getPlayStatByLevel()
-    .then((response) => {
-      console.log('play stat by level', response)
-      that.playStatByLevel = response.body
+  /////////////////////////////
+  /// Create layer functions //
+  /////////////////////////////
+  createLayers () {
+    let that = this,
+        width = this.game.world.width,
+        height = this.game.world.height
+
+    // Background layer 1: timeout counter
+    this.backgroundLayer1 = this.backgroundLayer1 || new GameLayer({
+      container: document.getElementById('background1'),
+      context: this,
+      update: this.updateBackground1
     })
+    this.backgroundLayer1.update()
+
+    // Background layer 2: kill boss counter
+    this.backgroundLayer2 = this.backgroundLayer2 || new GameLayer({
+      container: document.getElementById('background2'),
+      context: this,
+      update: this.updateBackground2,
+      classname: 'centerText',
+      style: {
+        fillStyle: 'rgba(124, 93, 96, 0.3)',
+        font: Math.min(width, height) + 'px Bangers',
+        textAlign: 'center',
+        textBaseline: 'middle'
+      }
+    })
+    this.backgroundLayer2.update()
+
+    // Background layer 3: game rate layer
+    this.backgroundLayer3 = this.backgroundLayer3 || new GameLayer({
+      container: document.getElementById('background3'),
+      context: this,
+      update: this.updateBackground3,
+      classname: 'centerText',
+      style: {
+        fillStyle: 'rgba(124, 93, 96, 0.3)',
+        font: Math.floor(Math.min(width, height) / 8) + 'px Bangers',
+        textAlign: 'center',
+        textBaseline: 'middle'
+      }
+    })
+    this.backgroundLayer3.update()
+
+    // Frontground layer 1: game over layer
+    // Game over title
+    let gameOverTitleElement = document.createElement('h1')
+    gameOverTitleElement.classList.add('gameoverTitle')
+
+    // Game rank
+    let gameRankElement = document.createElement('span')
+    gameRankElement.classList.add('gameRank')
+
+    // Player signature
+    let playerSignElement = document.createElement('input')
+    playerSignElement.classList.add('playerSign')
+    playerSignElement.setAttribute('placeholder','Your name?')
+    playerSignElement.setAttribute('maxlength', this.gameConfig.playerSignLimit || DEFAULT_PLAYER_SIGN_LIMIT)
+    playerSignElement.addEventListener('change', (evt) => {
+      that.playerSignText = evt.target.value
+    })
+
+    // Interactive container
+    let interactiveContainer = document.createElement('div')
+    interactiveContainer.classList.add('horizontalAlign')
+
+    // Restart button
+    let restartBtn = document.createElement('h2')
+    restartBtn.innerText = 'Restart'
+    restartBtn.addEventListener('touchend', (evt) => {
+      that.gameRestart()
+    })
+    interactiveContainer.appendChild(restartBtn)
+
+    // Share button
+    let shareBtn = document.createElement('h2')
+    shareBtn.innerText = 'Share'
+    shareBtn.addEventListener('touchend', (evt) => {
+      that.shareGame()
+    })
+    interactiveContainer.appendChild(shareBtn)
+
+    // Putting things together
+    this.frontgroundLayer1 = this.frontgroundLayer1 || new GameLayer({
+      container: document.getElementById('frontground1'),
+      context: this,
+      type: 'div',
+      layerId: 'frontground1Container',
+      update: this.updateFrontground1,
+      classname: 'centerText',
+      isHidden: true,
+      contents: [
+        gameOverTitleElement,
+        gameRankElement,
+        playerSignElement,
+        interactiveContainer
+      ]
+    })
+    this.listenFrontground1()
+    this.frontgroundLayer1.update()
+
+    // For debug
+    dotninja.layers = [
+      this.backgroundLayer1,
+      this.backgroundLayer2,
+      this.backgroundLayer3,
+      this.frontgroundLayer1
+    ]
+
   }
 
-  saveGameLog () {
-    // Create game log
-    let gameLog = {
-      // TODO: create player signature
-      sign: this.playerSignText || PLAYER_SIGN_TEXT,
-      playTimes: this.measureStat.sessions.map((session) => {
-        return {
-          level: session.gameLevel,
-          duration: session.end - session.start
-        }
-      }),
-      level: this.gameLevel
-    }
 
-    // Save to server
-    api.saveGameLog(gameLog)
-    .then((response) => {
-      console.log('save game log', response)
-    }, (error) => {
-      console.log('error', error)
-    })
-
-  }
-
+  /////////////////////////////
+  /// Update layer functions //
+  /////////////////////////////
   // Background for timeout counters
-  createBackground1 () {
-    // Add background if not exist
-    if (!this.backgroundLayer1) {
-      this.backgroundLayer1 = this.backgroundLayer1 || document.createElement('canvas')
-      let width = this.game.world.width
-      let height = this.game.world.height
-
-      this.backgroundLayer1.width = width
-      this.backgroundLayer1.height = height
-
-      let backgroundCtx = this.backgroundLayer1.getContext('2d')
-
-      document.getElementById('background1').appendChild(this.backgroundLayer1)
-
-    }
-    
-    this.updateBackgroundLayer1()
-  }
-
-  updateBackgroundLayer1 () {
+  updateBackground1 () {
     // Add the count down progress
-    let backgroundCtx = this.backgroundLayer1.getContext('2d')
+    let backgroundCtx = this.backgroundLayer1.context
     let countPercentage = (1 - Math.min(this.countDown / 10, 1)).toFixed(2)
     // let countPercentagePow = 1 - Math.min(Math.pow(this.countDown / 10, 2), 1)
-    let width = this.game.world.width
-    let height = this.game.world.height
+    let width = this.backgroundLayer1.element.width
+    let height = this.backgroundLayer1.element.height
 
     backgroundCtx.clearRect(0, 0, width, height)
     backgroundCtx.fillStyle = 'rgba(255' + ', 0, 0, ' + (0.2 * countPercentage).toFixed(2) + ')'
     backgroundCtx.fillRect(0, height * countPercentage, width, height)
-
   }
 
   // Background for kill boss counters
-  createBackground2 () {
-    // Add background if not exist
-    if (!this.backgroundLayer2) {
-      this.backgroundLayer2 = this.backgroundLayer2 || document.createElement('canvas')
-      this.backgroundLayer2.classList.add('centerText')
-      let width = this.game.world.width
-      let height = this.game.world.height
-
-      this.backgroundLayer2.width = width
-      this.backgroundLayer2.height = height
-
-      let backgroundCtx = this.backgroundLayer2.getContext('2d')
-      backgroundCtx.fillStyle = 'rgba(124, 93, 96, 0.3)'
-      backgroundCtx.font = Math.min(width, height) + 'px Bangers'
-      backgroundCtx.textAlign = 'center'
-      backgroundCtx.textBaseline = 'middle'
-
-      document.getElementById('background2').appendChild(this.backgroundLayer2)
-
-    }
-
-    this.updateBackgroundLayer2()
-  }
-
-  updateBackgroundLayer2 () {
+  updateBackground2 () {
     let that = this,
-        backgroundCtx = this.backgroundLayer2.getContext('2d'),
-        width = this.game.world.width,
-        height = this.game.world.height,
+        backgroundCtx = this.backgroundLayer2.context,
+        width = this.backgroundLayer2.element.width,
+        height = this.backgroundLayer2.element.height,
         fontSize = Math.floor(Math.min(width, height) / 20)
 
     backgroundCtx.clearRect(0, 0, width, height)
@@ -307,38 +350,99 @@ export default class extends Phaser.State {
   }
 
   // Background for game rate text
-  createBackground3 () {
-    // Add background if not exist
-    if (!this.backgroundLayer3) {
-      this.backgroundLayer3 = this.backgroundLayer3 || document.createElement('canvas')
-      this.backgroundLayer3.classList.add('centerText')
-      let width = this.game.world.width
-      let height = this.game.world.height
-
-      this.backgroundLayer3.width = width
-      this.backgroundLayer3.height = height
-
-      let backgroundCtx = this.backgroundLayer3.getContext('2d')
-      backgroundCtx.fillStyle = 'rgba(124, 93, 96, 0.3)'
-      backgroundCtx.font = Math.floor(Math.min(width, height) / 8) + 'px Bangers'
-      backgroundCtx.textAlign = 'center'
-      backgroundCtx.textBaseline = 'middle'
-
-      document.getElementById('background3').appendChild(this.backgroundLayer3)
-
-    }
-
-    this.updateBackgroundLayer3()
-  }
-
-  updateBackgroundLayer3 () {
-    let backgroundCtx = this.backgroundLayer3.getContext('2d'),
-        width = this.game.world.width,
-        height = this.game.world.height,
-        fontSize = Math.floor(Math.min(width, height) / 8),
-        rotateAngle = Math.PI * 2 * Math.random()
+  updateBackground3 () {
+    let backgroundCtx = this.backgroundLayer3.context,
+        width = this.backgroundLayer3.element.width,
+        height = this.backgroundLayer3.element.height,
+        fontSize = Math.floor(Math.min(width, height) / 8)
 
     backgroundCtx.fillText(this.gameRateText, width * Math.random(), height * Math.random())
+  }
+
+  updateFrontground1 () {
+    let that = this,
+        frontgroundLayer1Element = this.frontgroundLayer1.element,
+        gameOverTitleElement = frontgroundLayer1Element.querySelector('.gameoverTitle'),
+        gameRankElement = frontgroundLayer1Element.querySelector('.gameRank'),
+        playerSignElement = frontgroundLayer1Element.querySelector('.playerSign')
+
+    gameOverTitleElement.innerText = this.gameRateText
+    gameRankElement.innerText = 'Loading rank...'
+    playerSignElement.setAttribute('value', this.playerSignText || '')
+
+    // When total play count and game rank are resolved
+    // we will show the detail information
+    this.playStatByLevelPromise
+    .then(() => {
+      // Total play count is the same to anyone at first level
+      let existingPlayCount,
+          totalPlayCount,
+          gameCountAtCurrentLevel, 
+          gameRank,
+          existingPlayStat,
+          currentLevelStat
+
+      existingPlayCount = that.getPlayCountByLevel(that.playStatByLevel)
+      totalPlayCount = existingPlayCount + 1
+
+      gameCountAtCurrentLevel = that.getPlayCountByLevel(that.playStatByLevel, that.gameLevel)
+      gameRank = gameCountAtCurrentLevel + 1
+
+      gameRankElement.innerText = 'You rank ' 
+        + gameRank 
+        + ' from '
+        + totalPlayCount
+        + ' plays! (top ' 
+        + (100 * gameRank / totalPlayCount).toFixed(2) 
+        + '%) '
+
+    })
+  }
+
+  listenFrontground1 () {
+    let that = this
+    // Make sure user signature is no longer than 8 characters
+    this.frontgroundLayer1.element.addEventListener('touchstart', () =>  {
+      let playerSignElement = that.frontgroundLayer1.element.querySelector('.playerSign')
+      that.playerSignText = playerSignElement.value.substring(0, that.gameConfig.playerSignLimit || DEFAULT_PLAYER_SIGN_LIMIT)
+    })
+  }
+
+  //////////////////////////
+  /// Communication to BE //
+  //////////////////////////
+
+  fetchPlayStat () {
+    let that = this
+    this.playStatByLevelPromise = api.getPlayStatByLevel()
+    .then((response) => {
+      console.log('play stat by level', response)
+      that.playStatByLevel = response.body
+    })
+  }
+
+  saveGameLog () {
+    // Create game log
+    let gameLog = {
+      // TODO: create player signature
+      sign: this.playerSignText || PLAYER_SIGN_TEXT,
+      playTimes: this.measureStat.sessions.map((session) => {
+        return {
+          level: session.gameLevel,
+          duration: session.end - session.start
+        }
+      }),
+      level: this.gameLevel
+    }
+
+    // Save to server
+    api.saveGameLog(gameLog)
+    .then((response) => {
+      console.log('save game log', response)
+    }, (error) => {
+      console.log('error', error)
+    })
+
   }
 
   // Dev background 4
@@ -366,7 +470,7 @@ export default class extends Phaser.State {
       this.countDown = (this.countDown - 0.1).toFixed(1)
       // this.scoreText.text = 'Remain: ' + this.countDown + 's'
 
-      this.createBackground1()
+      this.backgroundLayer1.update()
 
       if (this.gameConfig.dev) {
         this.createBackground4()
@@ -382,6 +486,9 @@ export default class extends Phaser.State {
     this.longestTimeCount = Math.max(this.longestTimeCount, this.countDown)
   }
 
+  ////////////////////
+  /// Baddies logic //
+  ////////////////////
   createBaddies () {
     // Kill all existing baddies
     if (this.baddies) {
@@ -446,6 +553,9 @@ export default class extends Phaser.State {
     }
   }
 
+  /////////////////
+  /// Boss logic //
+  /////////////////
   createBoss (options = {}) {
     let getDim =  (center) => {
       return center + (Math.random() - 0.5) * 2 * center
@@ -476,44 +586,6 @@ export default class extends Phaser.State {
 
   }
 
-  createNinja (options = {}) {
-    this.ninja = new Ninja({
-      game: this,
-      x: this.world.centerX,
-      y: this.world.centerY,
-      // asset: 'ninja',
-      asset: 'roundIcon01',
-      options
-    })
-
-    this.ninja.scale.setTo(this.spriteScale, this.spriteScale)
-
-    this.game.add.existing(this.ninja)
-
-    this.startMeasureSession()
-  }
-
-  collideNinjaBaddies (ninja, baddie) {
-    this.killNinja(ninja)
-  }
-
-  collideNinjaBoss (ninja, boss) {
-    this.killBoss(ninja, boss)
-  }
-
-  killNinja (ninja) {
-    let that = this
-    
-    // Capture
-    this.captureDataURLs[0] = this.mainCanvas.toDataURL()
-
-    ninja.kill()
-
-    // When ninja is killed, game over
-    this.gameOver()
-
-  }
-
   killBoss (ninja, boss) {
     let that = this
     // Capture the moment!
@@ -535,6 +607,53 @@ export default class extends Phaser.State {
 
   }
 
+  //////////////////
+  /// Ninja logic //
+  //////////////////
+  createNinja (options = {}) {
+    this.ninja = new Ninja({
+      game: this,
+      x: this.world.centerX,
+      y: this.world.centerY,
+      // asset: 'ninja',
+      asset: 'roundIcon01',
+      options
+    })
+
+    this.ninja.scale.setTo(this.spriteScale, this.spriteScale)
+
+    this.game.add.existing(this.ninja)
+
+    this.startMeasureSession()
+  }
+
+  killNinja (ninja) {
+    let that = this
+    
+    // Capture
+    this.captureDataURLs[0] = this.mainCanvas.toDataURL()
+
+    ninja.kill()
+
+    // When ninja is killed, game over
+    this.gameOver()
+
+  }
+
+  ////////////////////
+  /// Collide logic //
+  ////////////////////
+  collideNinjaBaddies (ninja, baddie) {
+    this.killNinja(ninja)
+  }
+
+  collideNinjaBoss (ninja, boss) {
+    this.killBoss(ninja, boss)
+  }
+
+  ////////////////////////
+  /// Measurement logic //
+  ////////////////////////
   // Measure stat logics
   initMeasure () {
     this.measureStat = {
@@ -570,7 +689,9 @@ export default class extends Phaser.State {
     console.log('all:', this.measureStat)
   }
 
-  ////// LEVELS
+  /////////////////////////
+  /// Level update logic //
+  /////////////////////////
   nextLevel (nextStep = 1) {
     let that = this
     this.gameLevel += nextStep
@@ -585,15 +706,14 @@ export default class extends Phaser.State {
 
     this.gameRateText = gameRate.name
 
-    this.createBackground2()
-    this.createBackground3()
+    this.backgroundLayer2.update()
+    this.backgroundLayer3.update()
     this.addBaddie()
 
     // Start measure session
     this.startMeasureSession()
   }
 
-  ////// GAME OVER
   gameOver () {
     let that = this
     // Stop count down timer
@@ -609,15 +729,16 @@ export default class extends Phaser.State {
     }
 
     // Update the kill boss count background
-    this.createBackground2()
+    this.backgroundLayer2.update()
 
     // Capture the backgrounds
-    this.captureDataURLs[1] = this.backgroundLayer1.toDataURL()
-    this.captureDataURLs[2] = this.backgroundLayer2.toDataURL()
-    this.captureDataURLs[3] = this.backgroundLayer3.toDataURL()
+    this.captureDataURLs[1] = this.backgroundLayer1.element.toDataURL()
+    this.captureDataURLs[2] = this.backgroundLayer2.element.toDataURL()
+    this.captureDataURLs[3] = this.backgroundLayer3.element.toDataURL()
 
     // Create game over text
-    this.createFrontground1()
+    this.frontgroundLayer1.update()
+    this.frontgroundLayer1.show()
 
     // Listen on restart trigger
     let restartKey = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR)
@@ -627,6 +748,9 @@ export default class extends Phaser.State {
     this.saveGameLog()
   }
 
+  /////////////////
+  /// Game utils //
+  /////////////////
   createCapturePng () {
     let that = this,
         imageCanvasBuffer = document.createElement('canvas')
@@ -647,112 +771,6 @@ export default class extends Phaser.State {
     return imageCanvasBuffer.toDataURL()
   }
 
-  // Front ground for game over text
-  createFrontground1 () {
-    let that = this
-
-    if (!this.frontgroundContainer1) {
-      this.frontgroundContainer1 = document.createElement('div')
-      this.frontgroundContainer1.id = 'frontgroundContainer1'
-      this.frontgroundContainer1.classList.add('centerText')
-      let width = this.game.world.width
-      let height = this.game.world.height
-      let style = this.frontgroundContainer1.style
-      style.width = width + 'px'
-      style.height = height + 'px'
-      
-      // Show text
-      this.gameOverTitle = document.createElement('h1')
-      this.frontgroundContainer1.appendChild(this.gameOverTitle)
-
-      // Show rank
-      this.gameOverRank = document.createElement('span')
-      this.frontgroundContainer1.appendChild(this.gameOverRank)
-
-      // User signature
-      this.playerSign = document.createElement('input')
-      this.playerSign.classList.add('playerSign')
-      this.playerSign.setAttribute('placeholder','Your name?')
-      this.playerSign.setAttribute('maxlength', this.gameConfig.playerSignLimit || DEFAULT_PLAYER_SIGN_LIMIT)
-      this.frontgroundContainer1.appendChild(this.playerSign)
-
-      this.playerSign.addEventListener('change', (evt) => {
-        that.playerSignText = evt.target.value
-      })
-
-      // Interactives
-      let interactiveContainer = document.createElement('div')
-      interactiveContainer.classList.add('horizontalAlign')
-      this.frontgroundContainer1.appendChild(interactiveContainer)
-
-      // Restart button
-      let restartBtn = document.createElement('h2')
-      restartBtn.innerText = 'Restart'
-      interactiveContainer.appendChild(restartBtn)
-
-      restartBtn.addEventListener('touchend', (evt) => {
-        that.gameRestart()
-      })
-
-      // Share button
-      let shareBtn = document.createElement('h2')
-      shareBtn.innerText = 'Share'
-      interactiveContainer.appendChild(shareBtn)
-
-      shareBtn.addEventListener('touchend', (evt) => {
-        that.shareGame()
-      })
-
-      // Events listener globally
-      this.frontgroundContainer1.addEventListener('touchstart', () =>  {
-        that.playerSignText = that.playerSign.value.substring(0, this.gameConfig.playerSignLimit || DEFAULT_PLAYER_SIGN_LIMIT)
-      })
-
-      // Add front ground to document
-      document.getElementById('frontground1').appendChild(this.frontgroundContainer1)
-    }
-
-    this.updateFrontground1()
-  }
-
-  updateFrontground1 () {
-    let that = this
-
-    this.gameOverTitle.innerText = this.gameRateText
-    this.gameOverRank.innerText = 'Loading rank...'
-    this.playerSign.setAttribute('value', this.playerSignText || '')
-
-    // When total play count and game rank are resolved
-    // we will show the detail information
-    this.playStatByLevelPromise
-    .then(() => {
-      // Total play count is the same to anyone at first level
-      let existingPlayCount,
-          totalPlayCount,
-          gameCountAtCurrentLevel, 
-          gameRank,
-          existingPlayStat,
-          currentLevelStat
-
-      existingPlayCount = that.getPlayCountByLevel(that.playStatByLevel)
-      totalPlayCount = existingPlayCount + 1
-
-      gameCountAtCurrentLevel = that.getPlayCountByLevel(that.playStatByLevel, that.gameLevel)
-      gameRank = gameCountAtCurrentLevel + 1
-
-      that.gameOverRank.innerText = 'You rank ' 
-        + gameRank 
-        + ' from '
-        + totalPlayCount
-        + ' plays! (top ' 
-        + (100 * gameRank / totalPlayCount).toFixed(2) 
-        + '%) '
-
-    })
-
-    this.frontgroundContainer1.style.visibility = 'visible'
-  }
-
   getPlayCountByLevel (playStatByLevel = [], level = 0) {
     // Get existing play stat
     let playCount = 0,
@@ -765,11 +783,13 @@ export default class extends Phaser.State {
     return playCount
   }
 
-  createShareFontDataUrl () {
+  createShareImageText () {
     let that = this,
         width = this.game.world.width,
         height = this.game.world.height,
-        imageCanvasBuffer = document.createElement('canvas')
+        imageCanvasBuffer = document.createElement('canvas'),
+        frontgroundLayer1Element = this.frontgroundLayer1.element,
+        gameRankElement = frontgroundLayer1Element.querySelector('.gameRank')
 
     imageCanvasBuffer.width = width
     imageCanvasBuffer.height = height
@@ -790,7 +810,7 @@ export default class extends Phaser.State {
     // Creat game result text
     let fontSize = Math.floor(Math.min(width, height) / 20)
     imageCanvasBufferCtx.font = fontSize + 'px Bangers'
-    imageCanvasBufferCtx.fillText(this.gameOverRank.innerText, width / 2, height / 2 + fontSize * 1.5)
+    imageCanvasBufferCtx.fillText(gameRankElement.innerText, width / 2, height / 2 + fontSize * 1.5)
 
     this.captureDataURLs[5] = imageCanvasBuffer.toDataURL()
     imageCanvasBufferCtx.clearRect(0, 0, width, height)
@@ -814,8 +834,8 @@ export default class extends Phaser.State {
     let width = this.game.world.width
     let height = this.game.world.height
     this.captureDataURLs = []
-    this.backgroundLayer3.getContext('2d').clearRect(0, 0, width, height)
-    this.frontgroundContainer1.style.visibility = 'hidden'
+    this.backgroundLayer3.context.clearRect(0, 0, width, height)
+    this.frontgroundLayer1.hide()
   }
 
   shareGame () {
@@ -825,7 +845,7 @@ export default class extends Phaser.State {
     this.playStatByLevelPromise
     .then(() => {
       // Create share text
-      that.createShareFontDataUrl()
+      that.createShareImageText()
 
       let shareContainer = document.createElement('div')
       shareContainer.classList.add('centerText')

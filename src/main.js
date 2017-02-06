@@ -13,7 +13,7 @@ class Game extends Phaser.Game {
     let width = document.documentElement.clientWidth
     let height = document.documentElement.clientHeight
 
-    super(width, height, Phaser.CANVAS, 'content', null)
+    super(width, height, Phaser.CANVAS, 'content', null, true)
     
     // State manager
     this.state.add('Boot', BootState)
@@ -25,4 +25,12 @@ class Game extends Phaser.Game {
   }
 }
 
+// width, height, renderer, parent, state, transparent, antialias, physicsConfig
 window.game = new Game()
+// For debug
+window.dotninja = {
+  debug: () => {
+    document.querySelector('body').style.overflow = 'scroll'
+    document.querySelectorAll('.gameLayer').forEach((layer) => { layer.style.position = 'relative' })
+  }
+}
