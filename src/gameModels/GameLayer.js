@@ -1,7 +1,7 @@
 import _ from 'lodash'
 
 const DEFAULT_LAYER_WIDTH = 400
-const DEFAULT_LAYER_HEIGHT = 400
+const DEFAULT_LAYER_HEIGHT = 700
 
 export default class GameLayer {
 
@@ -25,7 +25,8 @@ export default class GameLayer {
         context = prop.context,
         width = prop.width || context ? context.game.world.width : DEFAULT_LAYER_WIDTH,
         height = prop.height || context ? context.game.world.height : DEFAULT_LAYER_HEIGHT,
-        contents = prop.contents || []
+        contents = prop.contents || [],
+        updateLayerFn = _.isFunction(prop.update) ? prop.update.bind(prop.context) : _.noop
 
     if (prop.classname) {
       layer.classList.add(prop.classname)
@@ -58,9 +59,6 @@ export default class GameLayer {
       layer.appendChild(content)
     })
 
-    // Make sure the layer is hidden if set to
-    layer.style.visibility = prop.isHidden ? 'hidden' : 'visible'
-
     // Add layer to document
     if (container) {
       container.appendChild(layer)  
@@ -68,20 +66,27 @@ export default class GameLayer {
       console.warn('No container for layer', layer)
     }
 
+    // Make sure the layer is hidden if set to
+    layer.hidden = !!prop.isHidden
+    this.displayStyle = window.getComputedStyle(layer).display
+    layer.style.display = layer.hidden ? 'none' : this.displayStyle
+
     // Attach to class instances
     _.extend(this, {
       element: layer,
       context: layerType === 'canvas' ? layer.getContext('2d') : null,
-      update: prop.update.bind(prop.context)
+      update: updateLayerFn
     })
   }
 
   show () {
-    this.element.style.visibility = 'visible'
+    this.element.hidden = false
+    this.element.style.display = this.displayStyle
   }
 
   hide () {
-    this.element.style.visibility = 'hidden'
+    this.element.hidden = true
+    this.element.style.display = 'none'
   }
 
 }

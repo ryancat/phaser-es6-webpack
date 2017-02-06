@@ -281,6 +281,42 @@ export default class extends Phaser.State {
     this.listenFrontground1()
     this.frontgroundLayer1.update()
 
+    // Frontground layer 2
+    // Create shared image
+    let image = new Image()
+    image.classList.add('shareImage')
+
+    // The description of shared image
+    let description = document.createElement('span')
+    description.classList.add('shareImageDescription')
+    description.innerText = 'Save the image and share!'
+
+    // The close button for shared image
+    let closeBtn = document.createElement('button')
+    closeBtn.classList.add('shareImageCloseBtn')
+    closeBtn.innerText = 'X'
+    closeBtn.addEventListener('click', () => {
+      that.frontgroundLayer2.hide()
+    })
+
+    // Put things together
+    this.frontgroundLayer2 = this.frontgroundLayer2 || new GameLayer({
+      container: document.getElementById('frontground2'),
+      type: 'div',
+      classname: 'centerText',
+      context: this,
+      isHidden: true,
+      style: {
+        backgroundColor: 'white'
+      },
+      update: this.updateFrontground2,
+      contents: [
+        image,
+        description,
+        closeBtn
+      ]
+    })
+
     // For debug
     dotninja.layers = [
       this.backgroundLayer1,
@@ -406,6 +442,15 @@ export default class extends Phaser.State {
       let playerSignElement = that.frontgroundLayer1.element.querySelector('.playerSign')
       that.playerSignText = playerSignElement.value.substring(0, that.gameConfig.playerSignLimit || DEFAULT_PLAYER_SIGN_LIMIT)
     })
+  }
+
+  updateFrontground2 () {
+    // Create share text
+    this.createShareImageText()
+
+    // Create shared image
+    let image = this.frontgroundLayer2.element.querySelector('.shareImage')
+    image.src = this.createCapturePng()
   }
 
   //////////////////////////
@@ -844,32 +889,8 @@ export default class extends Phaser.State {
     // Need to wait for ranking information arrives
     this.playStatByLevelPromise
     .then(() => {
-      // Create share text
-      that.createShareImageText()
-
-      let shareContainer = document.createElement('div')
-      shareContainer.classList.add('centerText')
-
-      // Create shared image
-      let image = new Image()
-      image.src = that.createCapturePng()
-      shareContainer.appendChild(image)
-
-      let description = document.createElement('span')
-      description.classList.add('shareImageDescription')
-      description.innerText = 'Save the image and share!'
-      shareContainer.appendChild(description)
-
-      let closeBtn = document.createElement('button')
-      closeBtn.classList.add('shareImageCloseBtn')
-      closeBtn.innerText = 'X'
-      shareContainer.appendChild(closeBtn)
-
-      closeBtn.addEventListener('click', () => {
-        document.getElementById('frontground2').removeChild(shareContainer)
-      })
-
-      document.getElementById('frontground2').appendChild(shareContainer)
+      that.updateFrontground2()
+      that.frontgroundLayer2.show()
     })
   }
 
