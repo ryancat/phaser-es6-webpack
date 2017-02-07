@@ -38,23 +38,6 @@ export default class GameLayer {
       // Layer attributes
       layer.id = prop.layerId
     }
-    
-    // different logics for layer types
-    switch(layerType) {
-      case 'canvas':
-        let layerCtx = layer.getContext('2d') 
-        // Styles
-        layer.width = width
-        layer.height = height
-        _.extend(layerCtx, prop.style)
-
-      case 'div':
-        let layerStyle = layer.style
-        // Styles
-        layerStyle.width = width + 'px'
-        layerStyle.height = height + 'px'
-        _.extend(layerStyle, prop.style)
-    }
 
     // Contents
     contents.forEach((content) => {
@@ -72,6 +55,24 @@ export default class GameLayer {
     layer.hidden = !!prop.isHidden
     this.displayStyle = window.getComputedStyle(layer).display
     layer.style.display = layer.hidden ? 'none' : this.displayStyle
+
+    // different logics for layer types
+    switch(layerType) {
+      case 'canvas':
+        let layerCtx = layer.getContext('2d') 
+        // Styles
+        layer.width = width
+        layer.height = height
+        _.extend(layerCtx, prop.style)
+        layerCtx.fillRect(0, 0, width, height)
+
+      case 'div':
+        let layerStyle = layer.style
+        // Styles
+        layerStyle.width = width + 'px'
+        layerStyle.height = height + 'px'
+        _.extend(layerStyle, prop.style)
+    }
 
     // Attach to class instances
     _.extend(this, {
